@@ -1,0 +1,23 @@
+﻿# 🔥😈 PORT 777 EVIL ☠️🔥👹 :: full stack (backend + frontend) in one command:
+#   docker compose up --build
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "127.0.0.1:${BACKEND_PORT:-8000}:8000"
+    env_file:
+      - ./backend/.env
+    volumes:
+      # the agent's sandbox + memory + db live outside the image
+      - ./backend/workspace:/app/workspace
+      - ./backend/memory_data:/app/memory_data
+      - ./backend/data:/app/data
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "127.0.0.1:${FRONTEND_PORT:-5173}:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
