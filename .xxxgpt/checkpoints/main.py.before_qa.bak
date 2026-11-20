@@ -1,0 +1,792 @@
+﻿"""
+🔥😈 PORT 777 EVIL ☠️🔥👹 :: FastAPI Backend v4
+
+Endpoints
+---------
+  POST /api/login      -> HMAC session token (only if ADMIN_PASSWORD set)
+  POST /api/chat       -> SSE stream (full_access gated by auth when set)
+  GET  /api/status     -> agent state + providers + auth_required flag
+  GET  /api/models     -> provider availability
+  GET  /api/history    -> sessions (SQLite, survives restarts)
+  GET  /api/history/{sid}
+  GET  /api/files      / POST /api/files / DELETE /api/files
+  GET  /api/system     -> host status snapshot
+  GET  /api/memory     -> RAG search/list    DELETE /api/memory
+  GET  /api/audit      -> Full-access action trail (auth-gated)
+  GET  /api/tasks      -> scheduled agent tasks   (auth-gated to create)
+  POST /api/tasks      -> schedule {prompt, interval_minutes}
+  DEL  /api/tasks/{id} -> remove
+Run:
+    uvicorn main:app --reload --port 8000
+"""
+from __future__ import annotations
+
+import base64
+import hashlib
+import hmac
+import asyncio
+import json
+import logging
+import os
+import secrets
+import shutil
+import sys
+import time
+import uuid
+from contextlib import asynccontextmanager
+from pathlib import Path
+from typing import List, Optional
+
+from fastapi import Depends, FastAPI, Header, HTTPException, Request, Response
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse, StreamingResponse
+from pydantic import BaseModel, Field
+
+import configs as config
+import memory
+import storage
+import voice
+from agent_engine import ENGINE
+from fastapi import File, UploadFile
+from fastapi.responses import FileResponse
+from model_router import ROUTER
+
+logging.basicConfig(level=logging.INFO)
+log = logging.getLogger("main")
+
+# --------------------------------------------------------------------- #
+#  Auth (JWT-lite: HMAC-signed tokens, stdlib only)
+# --------------------------------------------------------------------- #
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "").strip()
+AUTH_SECRET = (os.getenv("AUTH_SECRET", "").strip()
+               or secrets.token_hex(32))
+TOKEN_TTL = 12 * 3600  # 12h
+
+AUTH_REQUIRED = bool(ADMIN_PASSWORD)
+
+
+def _make_token() -> str:
+    payload = json.dumps({"exp": time.time() + TOKEN_TTL}).encode()
+    msg = base64.urlsafe_b64encode(payload).decode()
+    sig = hmac.new(AUTH_SECRET.encode(), msg.encode(), hashlib.sha256).hexdigest()
+    return f"{msg}.{sig}"
+
+
+def _verify_token(token: str) -> None:
+    if not AUTH_REQUIRED:
+        return
+    if not token:
+        raise HTTPException(401, "authentication required")
+    try:
+        msg, sig = token.split(".", 1)
+        good = hmac.new(AUTH_SECRET.encode(), msg.encode(),
+                        hashlib.sha256).hexdigest()
+        if not hmac.compare_digest(sig, good):
+            raise ValueError
+        payload = json.loads(base64.urlsafe_b64decode(msg))
+        if payload.get("exp", 0) < time.time():
+            raise ValueError("expired")
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(401, "invalid or expired token")
+
+
+def require_auth(authorization: str = Header(default="")) -> None:
+    _verify_token(authorization.replace("Bearer ", "").strip())
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    storage.init()                     # SQLite migrations
+    from scheduler import SCHEDULER
+    SCHEDULER.start()                  # background agent cron
+    log.info("🔥😈 PORT 777 EVIL ☠️🔥👹 booted | auth=%s | providers=%s",
+             AUTH_REQUIRED, ROUTER.status())
+    try:
+        yield
+    finally:
+        await SCHEDULER.stop()
+        try:
+            from tools.browser_tool import shutdown_browser
+            await shutdown_browser()
+        except Exception:
+            pass
+
+
+app = FastAPI(title="🔥😈 PORT 777 EVIL ☠️🔥👹", version="4.0.0", lifespan=lifespan)
+import gateway as _gw; app.mount('/api/gateway', _gw.app)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+# Serve built frontend SPA when available (keeps API routes intact)
+_FRONTEND_DIST = (Path(__file__).resolve().parents[1] / "frontend" / "dist")
+_FRONTEND_INDEX = _FRONTEND_DIST / "index.html"
+
+@app.get("/", include_in_schema=False)
+async def root():
+    if _FRONTEND_INDEX.exists():
+        return FileResponse(str(_FRONTEND_INDEX))
+    return {
+        "ok": True,
+        "service": "🔥😈 PORT 777 EVIL ☠️🔥👹 â€” Singularity Edition",
+        "ui": "http://localhost:5173",
+        "docs": "/docs",
+        "api": "/api/chat (POST, SSE)",
+    }
+
+
+class ChatRequest(BaseModel):
+    message: str = Field(min_length=1)
+    session_id: Optional[str] = None
+    model_route: Optional[str] = "auto"
+    model: Optional[str] = None  # gateway/OmniRoute-style alias; routed through filtered pool
+    mode: Optional[str] = None
+    full_access: bool = False
+
+
+class FileRequest(BaseModel):
+    action: str = "list"
+    path: str = "."
+    content: str = ""
+
+
+class LoginRequest(BaseModel):
+    password: str
+
+
+class TaskRequest(BaseModel):
+    prompt: str = Field(min_length=1)
+    interval_minutes: int = Field(ge=1, le=10080)  # 1min .. 7 days
+
+
+# --------------------------------------------------------------------- #
+#  Auth endpoints
+# --------------------------------------------------------------------- #
+@app.post("/api/login")
+async def login(req: LoginRequest):
+    if not AUTH_REQUIRED:
+        return {"token": "dev-open", "auth": False}
+    if req.password != ADMIN_PASSWORD:
+        raise HTTPException(401, "wrong password")
+    return {"token": _make_token(), "auth": True}
+
+
+# --------------------------------------------------------------------- #
+#  Chat -> SSE
+# --------------------------------------------------------------------- #
+@app.post("/api/chat")
+async def chat(req: ChatRequest, authorization: str = Header(default="")):
+    # God-mode double gate: explicit flag AND (a valid token if auth is on)
+    if req.full_access and AUTH_REQUIRED:
+        _verify_token(authorization.replace("Bearer ", "").strip())
+
+    sid = req.session_id or uuid.uuid4().hex[:12]
+    history = storage.get_history(sid)
+    t_req0 = time.perf_counter()
+
+    # Gateway activation + routing decision (header must be set before SSE starts)
+    try:
+        gw_activation = bool(_gw.gateway_settings().get("activation", True))
+        gw_free_only = bool(_gw.gateway_settings().get("freeOnly", True))
+    except Exception:
+        gw_activation, gw_free_only = True, True
+
+    requested_route = (req.model or req.model_route or "auto")
+    effective_route = requested_route
+    try:
+        if not gw_activation:
+            route_name, _brain = ROUTER.resolve("auto", task=req.message, activation=False, free_only=gw_free_only)
+            effective_route = "local"
+            decision = dict(getattr(ROUTER, "last_decision", {}) or {})
+            if not decision.get("header"):
+                m = str(getattr(config, "LOCAL_MODEL_NAME", "default") or "default")
+                decision = {"provider": "local", "model": m, "reason": "activation-off", "ms": 0,
+                            "activation_off": True, "header": f"local/{m} (activation-off)"}
+        else:
+            route_name, _brain = ROUTER.resolve(requested_route, task=req.message, activation=True, free_only=gw_free_only)
+            effective_route = str(route_name or requested_route)
+            decision = dict(getattr(ROUTER, "last_decision", {}) or {})
+            if not decision.get("header"):
+                decision = {"provider": effective_route, "model": effective_route, "reason": "resolved",
+                            "ms": int((time.perf_counter()-t_req0)*1000), "header": f"{effective_route}/{effective_route} (resolved)"}
+    except HTTPException:
+        raise
+    except Exception as exc:
+        log.warning("routing decision failed: %s", exc)
+        effective_route = requested_route or "auto"
+        decision = {"provider": "local", "model": "default", "reason": "resolve-error",
+                    "ms": int((time.perf_counter()-t_req0)*1000), "header": "local/default (resolve-error)"}
+
+    storage.add_message(sid, "user", req.message)
+    user_mid = f"msg_{int(time.time()*1000)}_{uuid.uuid4().hex[:6]}"
+    decision_ms = int((time.perf_counter() - t_req0) * 1000)
+    decision["ms"] = decision_ms
+    log.info("chat_decision provider=%s model=%s reason=%s ms=%s session_id=%s",
+             decision.get("provider"), decision.get("model"), decision.get("reason"), decision_ms, sid)
+
+    async def event_stream():
+        reply = ""
+        try:
+            async for event in ENGINE.run_stream(
+                req.message, history=history,
+                model_route=effective_route,
+                mode=req.mode or "code",
+                full_access=bool(req.full_access),
+                session_id=sid,
+                message_id=user_mid,
+            ):
+                if event["type"] == "final":
+                    reply = event["data"]
+                yield f"data: {json.dumps(event)}\n\n"
+        except Exception as exc:  # pragma: no cover
+            log.exception("agent crashed")
+            yield f"data: {json.dumps({'type': 'error', 'data': str(exc)})}\n\n"
+        finally:
+            storage.add_message(sid, "assistant", reply or "[no reply]")
+            yield f"data: {json.dumps({'type': 'done', 'data': sid})}\n\n"
+
+    return StreamingResponse(
+        event_stream(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no",
+            "X-Gateway-Decision": str(decision.get("header") or "local/default (resolved)"),
+            "X-OmniRoute-Decision": str(decision.get("header") or "local/default (resolved)"),  # monitoring parity
+        },
+    )
+
+
+# --------------------------------------------------------------------- #
+#  Status / models / history / system
+# --------------------------------------------------------------------- #
+@app.get("/api/status")
+async def status():
+    return {
+        "state": ENGINE.status,
+        "route": ENGINE.active_route,
+        "providers": ROUTER.status(),
+        "auth_required": AUTH_REQUIRED,
+    }
+
+
+@app.get("/api/models")
+async def models():
+    return {"providers": ROUTER.status()}
+
+
+@app.get("/api/history")
+async def history_list(q: str = ""):
+    return storage.list_sessions(q)
+
+
+@app.get("/api/history/{session_id}")
+async def history_get(session_id: str):
+    return storage.get_history(session_id, limit=200)
+
+
+@app.delete("/api/history/{session_id}")
+async def history_delete(session_id: str):
+    return {"deleted_messages": storage.delete_session(session_id)}
+
+
+@app.get("/api/system")
+async def system_status():
+    usage = shutil.disk_usage(str(config.WORKSPACE_DIR))
+    return {
+        "platform": sys.platform,
+        "python": sys.version.split()[0],
+        "workspace_writeable": os.access(config.WORKSPACE_DIR, os.W_OK),
+        "disk_total_gb": round(usage.total / 1e9, 1),
+        "disk_free_gb": round(usage.free / 1e9, 1),
+    }
+
+
+@app.get("/api/health")
+async def health():
+    return {"ok": True, "workspace": str(config.WORKSPACE_DIR),
+            "auth": AUTH_REQUIRED}
+
+
+# --------------------------------------------------------------------- #
+#  Voice: Whisper STT + offline TTS
+# --------------------------------------------------------------------- #
+@app.post("/api/transcribe")
+async def transcribe(file: UploadFile = File(...),
+                     language: Optional[str] = None):
+    data = await file.read()
+    suffix = Path(file.filename or "a.webm").suffix or ".webm"
+    text = await voice.transcribe(data, suffix=suffix, language=language)
+    return {"text": text, "ok": not text.startswith("ERROR")}
+
+
+@app.get("/api/tts")
+async def tts(text: str):
+    wav = await voice.synthesize(text)
+    if wav is None:
+        raise HTTPException(
+            503, "tts unavailable Ã¢â‚¬â€ install pyttsx3 (pip install pyttsx3)")
+    return FileResponse(str(wav), media_type="audio/wav",
+                        filename="🔥😈 PORT 777 EVIL ☠️🔥👹.wav")
+
+
+# --------------------------------------------------------------------- #
+#  Deep memory: workspace files index
+# --------------------------------------------------------------------- #
+@app.post("/api/memory/index")
+async def memory_index(_=Depends(require_auth)):
+    status = memory.memory_status() if hasattr(memory, "memory_status") else {}
+    if not bool(getattr(config, "MEMORY_ENABLED", False)):
+        raise HTTPException(400, "memory is disabled (MEMORY_ENABLED=false)")
+    if not bool(getattr(config, "FILE_INDEX_ENABLED", False)):
+        raise HTTPException(400, "file indexing is disabled (FILE_INDEX_ENABLED=false)")
+    indexed = await asyncio.to_thread(memory.index_workspace)
+    if hasattr(memory, "memory_status"):
+        status = memory.memory_status()
+    return {"ok": True, "indexed_chunks": indexed, "status": status}
+
+
+@app.get("/api/memory/status")
+async def memory_status_api(_=Depends(require_auth)):
+    if hasattr(memory, "memory_status"):
+        return memory.memory_status()
+    return {
+        "enabled": bool(getattr(config, "MEMORY_ENABLED", False)),
+        "file_index_enabled": bool(getattr(config, "FILE_INDEX_ENABLED", False)),
+        "engine": memory.engine_name(),
+    }
+
+
+# --------------------------------------------------------------------- #
+#  Audit trail (Full Access actions)
+# --------------------------------------------------------------------- #
+@app.get("/api/audit")
+async def audit_list(limit: int = 100, _=Depends(require_auth)):
+    return {"items": storage.get_audit(limit)}
+
+
+# --------------------------------------------------------------------- #
+#  Scheduled background tasks
+# --------------------------------------------------------------------- #
+@app.get("/api/tasks")
+async def tasks_list(_=Depends(require_auth)):
+    return storage.list_tasks()
+
+
+@app.post("/api/tasks")
+async def task_create(req: TaskRequest, authorization: str = Header(default="")):
+    _verify_token(authorization.replace("Bearer ", "").strip())
+    task_id = storage.add_task(req.prompt, req.interval_minutes)
+    log.info("scheduled task #%s every %s min", task_id,
+             req.interval_minutes)
+    return {"id": task_id, "interval_minutes": req.interval_minutes}
+
+
+@app.delete("/api/tasks/{task_id}")
+async def task_delete(task_id: int, authorization: str = Header(default="")):
+    _verify_token(authorization.replace("Bearer ", "").strip())
+    return {"deleted": storage.remove_task(task_id)}
+
+
+# --------------------------------------------------------------------- #
+#  Change proposals (human-in-the-loop self-improvement)
+# --------------------------------------------------------------------- #
+@app.get("/api/proposals")
+async def proposals_list(status: Optional[str] = None):
+    try:
+        import proposals as _pro
+        return _pro.list_proposals(status)
+    except Exception as exc:
+        raise HTTPException(500, str(exc))
+
+
+@app.post("/api/proposals/{pid}/approve", dependencies=[Depends(require_auth)])
+async def proposals_approve(pid: int):
+    import proposals as _pro
+    result = await asyncio.to_thread(_pro.apply_proposal, pid)
+    if not result.get("ok"):
+        raise HTTPException(409 if "already" in result.get("error", "")
+                            else 404, result.get("error", "apply failed"))
+    return result
+
+
+@app.post("/api/proposals/{pid}/reject", dependencies=[Depends(require_auth)])
+async def proposals_reject(pid: int):
+    import proposals as _pro
+    result = await asyncio.to_thread(_pro.reject, pid)
+    if not result.get("ok"):
+        raise HTTPException(409 if "already" in result.get("error", "")
+                            else 404, result.get("error", "reject failed"))
+    return result
+
+
+# --------------------------------------------------------------------- #
+#  File management (workspace sandbox)
+# --------------------------------------------------------------------- #
+MAX_UPLOAD = 200 * 1024 * 1024      # 200 MB "intelligence input" cap
+
+
+@app.post("/api/files/upload")
+async def files_upload(file: UploadFile = File(...),
+                       subdir: str = "uploads"):
+    """Intelligence-inputs protocol: any file lands in the sandbox and
+    returns an instant profile (type guess, size, text preview) so the
+    agent can analyse source/binaries/data files immediately."""
+    data = await file.read()
+    if len(data) > MAX_UPLOAD:
+        raise HTTPException(413, f"file too large (> {MAX_UPLOAD // 1048576}MB)")
+
+    name = Path(file.filename or "upload.bin").name   # no traversal
+    target = _safe(f"{subdir.strip('/')}/{name}")
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_bytes(data)
+
+    suffix = target.suffix.lower()
+    text_like = suffix in (".cpp", ".h", ".py", ".js", ".json", ".txt",
+                           ".md", ".asm", ".ini", ".yaml", ".yml",
+                           ".xml", ".csv", ".log")
+    profile = {
+        "path": str(target.relative_to(config.WORKSPACE_DIR)),
+        "size": len(data),
+        "kind": ("archive" if suffix in (".zip", ".tar", ".gz", ".rar")
+                 else "text" if text_like
+                 else "binary" if suffix in (".bin", ".exe", ".dll",
+                                             ".dat", ".so", ".lib")
+                 else "unknown"),
+    }
+    if text_like:
+        preview = data[:4000].decode("utf-8", errors="replace")
+        profile["preview"] = preview
+    return profile
+
+
+@app.get("/api/files")
+async def files_list():
+    root = config.WORKSPACE_DIR
+
+    def walk(p: Path, depth: int = 0):
+        items = []
+        try:
+            for child in sorted(p.iterdir()):
+                items.append({
+                    "name": child.name,
+                    "path": str(child.relative_to(root)),
+                    "is_dir": child.is_dir(),
+                    "size": child.stat().st_size if child.is_file() else 0,
+                    "depth": depth,
+                })
+                if child.is_dir() and depth < 4:
+                    items.extend(walk(child, depth + 1))
+        except PermissionError:
+            pass
+        return items
+
+    return {"root": str(root), "files": walk(root)}
+
+
+def _safe(path: str) -> Path:
+    root = config.WORKSPACE_DIR.resolve()
+    target = (root / path.lstrip("/\\")).resolve()
+    if root != target and root not in target.parents:
+        raise HTTPException(400, "path escapes workspace sandbox")
+    return target
+
+
+@app.post("/api/files")
+async def files_ops(req: FileRequest):
+    action = req.action.lower()
+    try:
+        if action == "list":
+            return await files_list()
+        if action == "read":
+            t = _safe(req.path)
+            if not t.is_file():
+                raise HTTPException(404, "not a file")
+            return {"path": req.path,
+                    "content": t.read_text(encoding="utf-8",
+                                           errors="replace")}
+        if action == "write":
+            t = _safe(req.path)
+            t.parent.mkdir(parents=True, exist_ok=True)
+            t.write_text(req.content, encoding="utf-8")
+            return {"path": req.path, "written": len(req.content)}
+        raise HTTPException(400, f"unknown action '{req.action}'")
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(500, str(exc))
+
+
+@app.delete("/api/files")
+async def files_delete(path: str):
+    t = _safe(path)
+    if t.is_dir():
+        if t == config.WORKSPACE_DIR:
+            raise HTTPException(400, "cannot delete workspace root")
+        shutil.rmtree(t)
+    elif t.is_file():
+        t.unlink()
+    else:
+        raise HTTPException(404, "not found")
+    return {"deleted": path}
+
+
+# --------------------------------------------------------------------- #
+#  Long-term memory (RAG)
+# --------------------------------------------------------------------- #
+@app.get("/api/memory")
+async def memory_view(q: Optional[str] = None, k: int = 8, _=Depends(require_auth)):
+    k = max(1, min(int(k or 8), 30))
+    query = (q or "").strip()
+    items = memory.recall(query, k=k) if query else memory.recent(k=k)
+    payload = {"engine": memory.engine_name(), "enabled": config.MEMORY_ENABLED,
+               "items": items, "k": k, "q": query}
+    if hasattr(memory, "memory_status"):
+        payload["status"] = memory.memory_status()
+    return payload
+
+
+@app.delete("/api/memory")
+async def memory_clear():
+    deleted = memory.wipe()
+    return {"deleted": deleted, "engine": memory.engine_name()}
+
+
+
+@app.get("/api/skills")
+async def api_skills():
+    try:
+        import skills as skills_mod
+        packs = skills_mod.load_packs()
+        return {"count": len(packs), "packs": packs[:500]}
+    except Exception as e:
+        return {"count": 0, "packs": [], "error": str(e)}
+
+
+@app.get("/api/files/read")
+async def files_read(path: str, _=Depends(require_auth) if AUTH_REQUIRED else None):
+    p = _safe(path)
+    if not p.exists() or not p.is_file():
+        raise HTTPException(404, "file not found")
+    data = p.read_bytes()
+    if len(data) > 300000:
+        data = data[:300000]
+    try:
+        text = data.decode("utf-8")
+    except Exception:
+        text = data.decode("utf-8", errors="replace")
+    return {"path": str(path), "content": text, "truncated": p.stat().st_size > 300000}
+
+@app.get("/api/config/public")
+async def config_public():
+    return {
+        "auth_required": AUTH_REQUIRED,
+        "workspace": str(config.WORKSPACE_DIR),
+        "backend": str(config.BACKEND_DIR),
+        "skills_dir": str(getattr(config, "SKILLS_DIR", "")),
+        "mcp_enabled": bool(getattr(config, "MCP_ENABLED", False)),
+        "routes": ["auto", "groq", "gemini", "hf", "local"],
+        "ui": {"brand": "🔥😈 PORT 777 EVIL ☠️🔥👹", "theme": "red-black"},
+    }
+
+
+# --------------------------------------------------------------------- #
+#  MCP foundation + guarded execution bridge (Tasks 1-3)
+# --------------------------------------------------------------------- #
+class McpServerRequest(BaseModel):
+    name: str = Field(min_length=1, max_length=120)
+    enabled: bool = True
+    transport: str = "stdio"
+    command: str = ""
+    args: List[str] = Field(default_factory=list)
+    env: dict = Field(default_factory=dict)
+
+
+class McpCallRequest(BaseModel):
+    server: str = Field(min_length=1, max_length=120)
+    tool: str = Field(min_length=1, max_length=200)
+    arguments: dict = Field(default_factory=dict)
+    full_access: bool = False
+
+
+def _mcp_auth(authorization: str = "") -> None:
+    if AUTH_REQUIRED:
+        _verify_token((authorization or "").replace("Bearer ", "").strip())
+
+
+@app.get("/api/mcp/status")
+async def mcp_status():
+    import mcp_manager
+    return mcp_manager.status()
+
+
+@app.get("/api/mcp/servers")
+async def mcp_servers_list():
+    import mcp_manager
+    return {"servers": mcp_manager.list_servers()}
+
+
+@app.post("/api/mcp/servers")
+async def mcp_servers_upsert(req: McpServerRequest,
+                             authorization: str = Header(default="")):
+    _mcp_auth(authorization)
+    import mcp_manager
+    try:
+        return mcp_manager.upsert_server(req.name, req.model_dump())
+    except ValueError as exc:
+        raise HTTPException(400, str(exc))
+
+
+@app.delete("/api/mcp/servers/{name}")
+async def mcp_servers_delete(name: str,
+                             authorization: str = Header(default="")):
+    _mcp_auth(authorization)
+    import mcp_manager
+    out = mcp_manager.remove_server(name)
+    if not out.get("ok"):
+        raise HTTPException(404, out.get("error", "not found"))
+    return out
+
+
+@app.post("/api/mcp/test/{name}")
+async def mcp_server_test(name: str,
+                          authorization: str = Header(default="")):
+    _mcp_auth(authorization)
+    import mcp_manager
+    return await mcp_manager.test_server(name)
+
+
+@app.post("/api/mcp/call")
+async def mcp_server_call(req: McpCallRequest,
+                          authorization: str = Header(default="")):
+    """Guarded operator-initiated MCP tool call (Task 3). Never open/public."""
+    _mcp_auth(authorization)
+    import mcp_manager
+    if not bool(getattr(config, "MCP_ENABLED", False)):
+        raise HTTPException(403, "MCP execution is disabled (MCP_ENABLED=false)")
+    if not bool(req.full_access):
+        raise HTTPException(403, "full_access=true is required for MCP tool execution")
+    result = await mcp_manager.call_tool(
+        req.server, req.tool, req.arguments or {}, allow_execution=True)
+    if not result.get("ok"):
+        # Keep 200 with structured error so UI can display details; 4xx for policy.
+        err = str(result.get("error", "MCP call failed"))
+        if "requires Full Access" in err or "disabled" in err or "not found" in err:
+            raise HTTPException(403, err)
+    return result
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+
+# --------------------------------------------------------------------- #
+# Frontend SPA (built) â€” mounted AFTER API routes so /api/* is never intercepted
+# --------------------------------------------------------------------- #
+if _FRONTEND_DIST.exists():
+    from fastapi.staticfiles import StaticFiles
+    assets_dir = _FRONTEND_DIST / "assets"
+    if assets_dir.exists():
+        app.mount("/assets", StaticFiles(directory=str(assets_dir)), name="assets")
+
+    @app.get("/{full_path:path}", include_in_schema=False)
+    async def spa_fallback(full_path: str):
+        # Never shadow API/v1/docs/openapi
+        if full_path.startswith("api") or full_path.startswith("v1") or full_path in {"docs", "openapi.json", "redoc", "favicon.ico"}:
+            raise HTTPException(404, "not found")
+        candidate = (_FRONTEND_DIST / full_path).resolve()
+        try:
+            candidate.relative_to(_FRONTEND_DIST.resolve())
+        except Exception:
+            candidate = None
+        if candidate and candidate.is_file():
+            return FileResponse(str(candidate))
+        if _FRONTEND_INDEX.exists():
+            return FileResponse(str(_FRONTEND_INDEX))
+        raise HTTPException(404, "not found")
+from langchain_core.messages import HumanMessage, SystemMessage
+from pydantic import BaseModel
+class EnhanceIn(BaseModel):
+    text: str
+    mode: str = "code"
+
+@app.post("/api/prompt/enhance")
+async def enhance_prompt(req: EnhanceIn):
+    text = (req.text or "").strip()
+    if not text:
+        return {"text": ""}
+    try:
+        route, brain = ROUTER.resolve("auto")
+        if not brain:
+            return {"text": text}
+        mode = (req.mode or "code").strip().lower() or "code"
+        sys = (
+            "You improve a user's prompt for an AI coding/work assistant. "
+            "Return ONLY the improved prompt text, no preamble, no quotes, no markdown fences. "
+            "Preserve intent, language, constraints, file names, and code. Make it clearer, specific, and actionable. "
+            f"Mode/context: {mode}."
+        )
+        msg = await brain.ainvoke([SystemMessage(content=sys), HumanMessage(content=text[:12000])])
+        out = (getattr(msg, "content", None) or str(msg) or "").strip()
+        # strip accidental wrapping
+        if out.startswith("```"):
+            out = "\n".join([ln for ln in out.splitlines() if not ln.strip().startswith("```")]).strip()
+        return {"text": out or text}
+    except Exception:
+        log.exception("prompt enhance failed")
+        return {"text": text}
+
+class FeedbackIn(BaseModel):
+    session_id: str
+    message_id: str
+    vote: int
+
+@app.post("/api/feedback")
+async def feedback(req: FeedbackIn):
+    try:
+        fid = storage.add_feedback(req.session_id, req.message_id, req.vote)
+        return {"ok": True, "id": fid}
+    except Exception as exc:
+        raise HTTPException(500, str(exc))
+import checkpoint as _ckpt
+
+class CheckpointManualIn(BaseModel):
+    session_id: str = ""
+    files: List[str] = Field(default_factory=list)
+    message_id: str = ""
+
+@app.get("/api/checkpoints")
+async def list_ckpts(session_id: str = ""):
+    return {"checkpoints": _ckpt.list_checkpoints(session_id)}
+
+@app.get("/api/checkpoints/{cid}/diff")
+async def ckpt_diff(cid: str, session_id: str = ""):
+    try:
+        return {"diff": _ckpt.diff_checkpoint(cid, session_id)}
+    except FileNotFoundError as exc:
+        raise HTTPException(404, str(exc))
+
+@app.post("/api/checkpoints/{cid}/revert")
+async def ckpt_revert(cid: str, session_id: str = ""):
+    try:
+        return _ckpt.revert_checkpoint(cid, session_id)
+    except FileNotFoundError as exc:
+        raise HTTPException(404, str(exc))
+
+@app.post("/api/checkpoints/{cid}")
+async def ckpt_manual(cid: str, req: CheckpointManualIn):
+    # Manual snapshot endpoint (spec: POST /api/checkpoints/{id} optional).
+    # {cid} is accepted for compatibility; stored id is generated.
+    sid = req.session_id or "default"
+    files = req.files or []
+    if not files:
+        raise HTTPException(400, "files list required for manual snapshot")
+    return _ckpt.create_checkpoint(sid, req.message_id or f"manual:{cid}", files, kind="manual")

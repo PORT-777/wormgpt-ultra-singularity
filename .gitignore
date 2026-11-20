@@ -1,0 +1,21 @@
+#  .gitignore :: WormGPT Ultra
+# NEVER commit real keys.
+backend/.env
+.env
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# node
+node_modules/
+dist/
+
+# workspace sandbox contents
+workspace/
+# long-term memory store
+backend/memory_data/
+# sqlite + audit trail
+backend/data/
