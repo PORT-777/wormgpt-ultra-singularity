@@ -1,0 +1,15 @@
+{
+  "name": "🔥😈 PORT 777 EVIL ☠️🔥👹",
+  "short_name": "🔥😈 PORT 777 EVIL ☠️🔥👹",
+  "description": "Private AI workspace for chat, code, research, files, and agents.",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#08080a",
+  "theme_color": "#ef233c",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

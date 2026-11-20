@@ -104,7 +104,7 @@ def _popup_html(payload: Dict[str, Any], title: str) -> str:
   <div class="box">
     <div class="dot"></div>
     <strong style="font-size:14px">{html.escape(title)}</strong>
-    <p>This window closes automatically.</p>
+    <p>Your project is linked. You can close this tab.</p>
   </div>
 <script>
 (function () {{
@@ -393,7 +393,7 @@ async def oauth_callback(
                         "plugin": outcome.plugin_id,
                         "account": outcome.account_name,
                     },
-                    "Connected successfully",
+                    "Connected to your project — تم الربط بمشروعك",
                 )
             )
         return RedirectResponse(

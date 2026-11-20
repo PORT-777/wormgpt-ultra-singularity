@@ -30,6 +30,7 @@ const NAV = () => [
   { id: "ops", icon: "graph", label: t("عمليات IOC", "IOC operations"), group: "advanced" },
   { id: "progress", icon: "trophy", label: t("التقدم والخبرة", "Progress & XP"), group: "advanced" },
   { id: "plugins", icon: "plug", label: t("الإضافات والتكاملات", "Plugins & integrations"), group: "advanced" },
+  { id: "repos", icon: "gitBranch", label: t("المستودعات المدمجة", "Vendored repos"), group: "advanced" },
   { id: "mcp", icon: "plug", label: t("الإضافات (MCP)", "Extensions (MCP)"), group: "advanced" },
   { id: "export", icon: "download", label: t("تصدير المحادثة", "Export chat"), group: "advanced" },
 ];
@@ -283,6 +284,53 @@ function McpView({ notify }) {
   );
 }
 
+function VendorView({ notify }) {
+  const [{ loading, error, data }, reload] = useJson("/api/vendor/repos");
+  const repos = data?.repos || [];
+  return (
+    <div style={{ display: "grid", gap: 12 }}>
+      <div className="ctx-card" style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div style={{ flex: 1 }}>
+          <h4 style={{ margin: 0 }}>{t("المستودعات المدمجة", "Vendored repos")}</h4>
+          <div style={{ fontSize: 11, color: "var(--muted)" }}>
+            {data?.vendor_dir || "vendor/"} · {repos.length} repos · {t("متاحة كمراجع للمشروع", "available as project references")}
+          </div>
+        </div>
+        <button type="button" className="btn sm ghost" onClick={reload}>
+          <Icon name="refresh" size={12} /> {t("تحديث", "Refresh")}
+        </button>
+      </div>
+      {loading && <Empty>{t("جارٍ تحميل المستودعات…", "Loading repos…")}</Empty>}
+      {error && <div className="ctx-card" style={{ color: "var(--danger-fg)" }}>{error}</div>}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(260px,1fr))", gap: 10 }}>
+        {repos.map((r) => (
+          <div key={r.id} className="ctx-card vendor-card" style={{ display: "grid", gap: 7 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span className="vendor-icon"><Icon name={r.id === "ECC" ? "zap" : r.id === "claude-skills" ? "wand" : r.id === "openhands" ? "bot" : "brain"} size={18} /></span>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontWeight: 600, fontSize: 13 }}>{r.name}</div>
+                <div style={{ fontSize: 10, color: "var(--muted)" }}>{r.role}</div>
+              </div>
+            </div>
+            <div style={{ fontSize: 10.5, color: "var(--muted)", lineHeight: 1.55 }}>{r.summary || t("لا يوجد ملخص", "No summary")}</div>
+            <div style={{ fontSize: 10, color: "var(--muted)" }}>
+              {r.present ? `${r.file_count} files · ${r.commit}` : t("غير موجود", "not present")}
+            </div>
+            <div style={{ display: "flex", gap: 6 }}>
+              <a className="btn sm ghost" href={r.url} target="_blank" rel="noreferrer">
+                <Icon name="globe" size={11} /> GitHub
+              </a>
+              <button type="button" className="btn sm ghost" onClick={() => { try { navigator.clipboard?.writeText(r.path); notify?.("path copied", "ok"); } catch {} }}>
+                <Icon name="copy" size={11} /> {t("المسار", "Path")}
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function ExportView({ sessionId, notify }) {
   const [state, setState] = useState("");
   const doExport = async () => {
@@ -373,6 +421,7 @@ export default function Advanced({ view, setView, onClose, sessionId, notify, ch
             {view === "progress" && <ProgressPanel notify={notify} onClose={() => setView("models")} />}
             {view === "plugins" && <PluginsPanel notify={notify} />}
             {view === "mcp" && <McpView notify={notify} />}
+      {view === "repos" && <VendorView notify={notify} />}
             {view === "export" && <ExportView sessionId={sessionId} notify={notify} />}
           </div>
         </div>

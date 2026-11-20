@@ -154,7 +154,7 @@ export default function Sidebar({
       <div className="side-brand">
         <div className="brand-mark" aria-hidden="true">P7</div>
         <div className="brand-txt">
-          <div className="brand-name">PORT 777</div>
+          <div className="brand-name">🔥😈 PORT 777 EVIL ☠️🔥👹</div>
           <div className="brand-sub">{t("مساحة الذكاء", "AI Workspace")}</div>
         </div>
         {onCollapse && (

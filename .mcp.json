@@ -1,9 +1,9 @@
 ﻿{
   "mcpServers": {
-    "🔥😈 PORT 777 EVIL ☠️🔥👹-ultra": {
-      "command": "D:\\xxxGPT\\🔥😈 PORT 777 EVIL ☠️🔥👹_Ultra_Singularity\\backend\\.venv\\Scripts\\python.exe",
+    "wormgpt-local": {
+      "command": "D:\\xxxGPT\\WormGPT_Ultra_Singularity\\backend\\.venv\\Scripts\\python.exe",
       "args": [
-        "D:\\xxxGPT\\🔥😈 PORT 777 EVIL ☠️🔥👹_Ultra_Singularity\\backend\\mcp_server.py"
+        "D:\\xxxGPT\\WormGPT_Ultra_Singularity\\backend\\mcp_server.py"
       ]
     },
     "github": {
@@ -13,7 +13,7 @@
         "@modelcontextprotocol/server-github"
       ],
       "env": {
-        "GITHUB_PERSONAL_ACCESS_TOKEN": "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"
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "REPLACE_WITH_YOUR_GITHUB_PAT"
       }
     },
     "postgresql": {

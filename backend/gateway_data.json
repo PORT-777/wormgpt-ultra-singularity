@@ -18,6 +18,7 @@
       "freeOnly": true,
       "status": "ok",
       "_models": [
+        "mistralai/pixtral-large-2502",
         "google/gemini-4-neon",
         "google/gemini-4-neon:batch",
         "openai/gpt-6.2-astra-pro",
@@ -215,7 +216,6 @@
         "sakana/fugu-ultra",
         "google/gemini-3.1-flash-image",
         "google/gemini-3-pro-image",
-        "cohere/north-mini-code:free",
         "z-ai/glm-5.2",
         "z-ai/glm-5.2:batch",
         "moonshotai/kimi-k2.7-code",
@@ -231,7 +231,6 @@
         "stepfun/step-3.7-flash",
         "anthropic/claude-opus-4.8",
         "qwen/qwen3.7-max",
-        "x-ai/grok-build-0.1",
         "google/gemini-3.5-flash",
         "google/gemini-3.5-flash:batch",
         "perceptron/perceptron-mk1",
@@ -429,7 +428,6 @@
         "qwen/qwen-2.5-coder-32b-instruct",
         "thedrummer/unslopnemo-12b",
         "anthracite-org/magnum-v4-72b",
-        "meta-llama/llama-3.2-1b-instruct",
         "meta-llama/llama-3.2-3b-instruct",
         "qwen/qwen-2.5-72b-instruct",
         "cohere/command-r-08-2024",
@@ -463,11 +461,10 @@
         "openrouter/free",
         "openrouter/bodybuilder"
       ],
-      "modelsCount": 444,
+      "modelsCount": 442,
       "_meta": {
         "free_ids": [
           "baidu/ernie-5.5-flash-preview:free",
-          "cohere/north-mini-code:free",
           "dots-studio/dots-3-note-preview:free",
           "google/gemma-4-26b-a4b-it:free",
           "google/gemma-4-31b-it:free",
@@ -496,6 +493,7 @@
       "status": "ok",
       "_models": [
         "bigcode/starcoder2-15b",
+        "fastino/gliner2-pii",
         "google/gemma-3-12b-it",
         "google/gemma-3-4b-it",
         "google/gemma-4-31b-it",
@@ -528,7 +526,7 @@
         "stepfun-ai/step-5-preview",
         "z-ai/glm-5.3-flash"
       ],
-      "modelsCount": 32
+      "modelsCount": 33
     },
     {
       "id": "5dea00fda47d",
@@ -546,6 +544,7 @@
         "openai/gpt-6.2-sol",
         "deepseek/deepseek-v4.1-flash-1017",
         "z-ai/glm-5.3-flash",
+        "mistralai/pixtral-large-2502",
         "google/gemini-4-neon",
         "openai/gpt-6.2-astra-pro",
         "openai/gpt-6.2-astra",
@@ -695,7 +694,6 @@
         "sakana/fugu-ultra",
         "google/gemini-3.1-flash-image",
         "google/gemini-3-pro-image",
-        "cohere/north-mini-code:free",
         "z-ai/glm-5.2",
         "moonshotai/kimi-k2.7-code",
         "~anthropic/claude-fable-latest",
@@ -708,7 +706,6 @@
         "stepfun/step-3.7-flash",
         "anthropic/claude-opus-4.8",
         "qwen/qwen3.7-max",
-        "x-ai/grok-build-0.1",
         "google/gemini-3.5-flash",
         "perceptron/perceptron-mk1",
         "google/gemini-3.1-flash-lite",
@@ -893,7 +890,6 @@
         "qwen/qwen-2.5-coder-32b-instruct",
         "thedrummer/unslopnemo-12b",
         "anthracite-org/magnum-v4-72b",
-        "meta-llama/llama-3.2-1b-instruct",
         "meta-llama/llama-3.2-3b-instruct",
         "qwen/qwen-2.5-72b-instruct",
         "cohere/command-r-08-2024",
@@ -1014,11 +1010,10 @@
         "kilo-auto/balanced",
         "kilo-auto/small"
       ],
-      "modelsCount": 473,
+      "modelsCount": 471,
       "_meta": {
         "free_ids": [
           "baidu/ernie-5.5-flash-preview:free",
-          "cohere/north-mini-code:free",
           "dots-studio/dots-3-note-preview:free",
           "google/lyria-3-clip-preview",
           "google/lyria-3-pro-preview",
@@ -1076,24 +1071,22 @@
       }
     },
     {
-      "id": "3c91d72f022c",
-      "name": "custom",
-      "baseUrl": "",
-      "key": "",
-      "tier": "paid",
+      "id": "f2b562862ba2",
+      "name": "openhands",
+      "baseUrl": "https://api.digitalocean.com",
+      "key": "phc_kBtz5nKmxVRRQ7HtPwr2QX9eMC5j65zE86QKocVNwb4U",
+      "tier": "free",
       "enabled": true,
       "freeOnly": true,
       "status": "error",
-      "_models": [
-        "totally/bogus-model-xyz"
-      ],
-      "modelsCount": 1
+      "_models": [],
+      "modelsCount": 0
     },
     {
-      "id": "01ba72c7b1f6",
-      "name": "smoke-fake",
-      "baseUrl": "http://127.0.0.1:9/v1",
-      "key": "gsk_test_1234567890abcdef",
+      "id": "8b6cf01964e3",
+      "name": "openhands",
+      "baseUrl": "https://docs.digitalocean.com/reference/api",
+      "key": "phc_kBtz5nKmxVRRQ7HtPwr2QX9eMC5j65zE86QKocVNwb4U",
       "tier": "free",
       "enabled": true,
       "freeOnly": true,

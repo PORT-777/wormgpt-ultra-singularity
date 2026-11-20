@@ -27,10 +27,13 @@ import configs as config
 #  the previous module-global dict leaked God-mode between users.
 # ------------------------------------------------------------------ #
 _FULL_ACCESS: contextvars.ContextVar = contextvars.ContextVar(
-    "🔥😈 PORT 777 EVIL ☠️🔥👹_full_access", default=False
+    "🔥😈 PORT 777 EVIL ☠️🔥👹_full_access", default=None
 )
 _CKPT_CTX: contextvars.ContextVar = contextvars.ContextVar(
     "🔥😈 PORT 777 EVIL ☠️🔥👹_ckpt_ctx", default=None
+)
+_PROJECT_DIR: contextvars.ContextVar = contextvars.ContextVar(
+    "🔥😈 PORT 777 EVIL ☠️🔥👹_project_dir", default=None
 )
 
 
@@ -39,11 +42,30 @@ def set_full_access(enabled: bool) -> None:
 
 
 def full_access() -> bool:
-    return _FULL_ACCESS.get()
+    value = _FULL_ACCESS.get()
+    if value is None:
+        # No explicit per-run value: zero-refusal mode grants host access.
+        return bool(getattr(config, "ZERO_REFUSAL", False))
+    return bool(value)
 
 
 def set_checkpoint_context(ctx: Dict[str, Any] | None) -> None:
     _CKPT_CTX.set(ctx)
+
+
+def set_project(path: str | None) -> None:
+    """Bind the active chat session to a project directory."""
+    if not path:
+        _PROJECT_DIR.set(None)
+        return
+    try:
+        _PROJECT_DIR.set(str(Path(path).expanduser().resolve()))
+    except Exception:
+        _PROJECT_DIR.set(None)
+
+
+def project_dir() -> str | None:
+    return _PROJECT_DIR.get()
 
 
 def checkpoint_context() -> Dict[str, Any] | None:
@@ -80,7 +102,7 @@ class Tool(ABC):
         When an execution task is active, the task's private workspace is used
         instead of the global workspace, so a task can never touch another
         task's files."""
-        root = Path(_active_workspace() or config.WORKSPACE_DIR).resolve()
+        root = Path(project_dir() or _active_workspace() or config.WORKSPACE_DIR).resolve()
         target = (root / str(path).lstrip("/\\")).resolve()
         if root != target and root not in target.parents:
             raise ValueError(f"path '{path}' escapes the workspace sandbox")
@@ -95,7 +117,7 @@ class Tool(ABC):
         the user owns the machine, but nobody should be able to (even
         accidentally) command rm -rf C:\\Windows.
         """
-        root = Path(_active_workspace() or config.WORKSPACE_DIR)
+        root = Path(project_dir() or _active_workspace() or config.WORKSPACE_DIR)
         target = Path(str(path)).expanduser().resolve()
         # sandboxed relative paths still resolve into the workspace
         if not target.is_absolute():

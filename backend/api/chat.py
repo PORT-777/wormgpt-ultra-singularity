@@ -2,7 +2,7 @@ import json
 import logging
 from typing import Any, AsyncGenerator, Dict, List, Optional
 
-from fastapi import APIRouter, Header, HTTPException
+from fastapi import APIRouter, Header, HTTPException, Request
 from pydantic import BaseModel, Field
 
 from backend.plugins.deps import get_runtime
@@ -156,3 +156,104 @@ async def list_active_tools(x_user_id: Optional[str] = Header(None)):
     runtime = get_runtime()
     tools = await runtime.get_user_tools(x_user_id or "default_user")
     return {"count": len(tools), "tools": tools}
+
+# -------------------------------------------------------------------------
+# Main chat endpoint used by the UI. Bridges the normal conversation to the
+# real AgentEngine tool loop instead of a separate execution panel.
+# -------------------------------------------------------------------------
+@router.post("/chat")
+async def ui_chat(request: Request) -> Any:
+    from fastapi.responses import JSONResponse, StreamingResponse
+
+    try:
+        req = await request.json()
+    except Exception:
+        req = {}
+    messages = req.get("messages") or []
+    user = ""
+    history: List[Dict[str, str]] = []
+    for item in messages:
+        role = str(item.get("role", ""))
+        content = str(item.get("content", "")).strip()
+        if role in ("user", "assistant") and content:
+            history.append({"role": role, "content": content})
+        if role == "user" and not user:
+            user = content
+    if not user:
+        user = str(req.get("message") or "").strip()
+
+    project_path = str(req.get("project_path") or req.get("workspace_path") or "").strip()
+    try:
+        from tools.base import set_project
+
+        set_project(project_path)
+    except Exception:
+        pass
+
+    try:
+        import configs as config
+
+        full_access = True if getattr(config, "ZERO_REFUSAL", False) else bool(req.get("full_access", False))
+    except Exception:
+        full_access = bool(req.get("full_access", False))
+
+    try:
+        from backend.agent_engine import ENGINE
+    except Exception as exc:
+        return JSONResponse(status_code=503, content={"error": {"message": f"engine unavailable: {exc}", "type": "server_error"}})
+
+    if ENGINE is None:
+        return JSONResponse(status_code=503, content={"error": {"message": "engine unavailable", "type": "server_error"}})
+
+    system_prompt = str(req.get("system_prompt") or req.get("systemPrompt") or "").strip() or None
+    if project_path:
+        system_prompt = (
+            f"Active project directory: {project_path}. All file operations and "
+            "CodeIntelligence tasks target this project unless the user says otherwise.\n\n"
+            + (system_prompt or "")
+        )
+
+    model_name = str(req.get("model") or "auto")
+    stream = bool(req.get("stream", True))
+
+    async def events():
+        try:
+            async for ev in ENGINE.run_stream(
+                user,
+                history=history or None,
+                model_route=str(req.get("model_route") or "auto"),
+                model_name=model_name,
+                full_access=full_access,
+                depth=str(req.get("depth") or "standard"),
+                system_prompt=system_prompt,
+            ):
+                yield f"data: {json.dumps(ev, default=str, ensure_ascii=False)}\n\n"
+        except Exception as exc:
+            yield f"data: {json.dumps({'type': 'error', 'data': f'{type(exc).__name__}: {exc}'}, ensure_ascii=False)}\n\n"
+        yield "data: [DONE]\n\n"
+
+    if stream:
+        return StreamingResponse(
+            events(), media_type="text/event-stream",
+            headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+        )
+
+    parts: List[str] = []
+    final = ""
+    async for line in events():
+        if not line.startswith("data: ") or "[DONE]" in line:
+            continue
+        try:
+            ev = json.loads(line[6:].strip())
+        except Exception:
+            continue
+        kind = ev.get("type", "")
+        data = ev.get("data")
+        if kind == "stream" and data:
+            parts.append(str(data))
+        elif kind == "final" and data:
+            final = str(data)
+    if not final:
+        final = "".join(parts)
+    return {"status": "ok", "final": final, "project_path": project_path}
+

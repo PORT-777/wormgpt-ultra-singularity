@@ -3,6 +3,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import Icon from "./Icon.jsx";
 import PluginIcon from "./PluginIcon.jsx";
 import { t } from "../ui/i18n.js";
+import { isExternalBrowsableUrl, isLoopbackAppUrl } from "../ui/urlPolicy.js";
 
 /* ------------------------------------------------------------------ api ---- */
 
@@ -280,6 +281,12 @@ export default function PluginsPanel({ notify }) {
   const [healthRefreshedAt, setHealthRefreshedAt] = useState(null);
   const [showHistory, setShowHistory] = useState(false);
   const [showHealth, setShowHealth] = useState(false);
+  const [connectSid, setConnectSid] = useState("");
+  const [connectState, setConnectState] = useState("");
+  const [connectingId, setConnectingId] = useState("");
+  const [oauthSetupFor, setOauthSetupFor] = useState(null);
+  const [oauthConfig, setOauthConfig] = useState(null);
+  const [oauthForm, setOauthForm] = useState({ client_id: "", client_secret: "" });
 
   const say = useCallback(
     (msg, kind = "info") => {
@@ -369,6 +376,35 @@ export default function PluginsPanel({ notify }) {
   useEffect(() => {
     load();
   }, [load]);
+
+  // One-click connect: wait for the managed browser to observe the credential,
+  // then finish the link without any key being typed into this app.
+  useEffect(() => {
+    if (!connectSid) return;
+    let alive = true;
+    const timer = setInterval(async () => {
+      try {
+        const st = await api(`/api/connect/status/${encodeURIComponent(connectSid)}`);
+        if (!alive) return;
+        setConnectState(st.status || "");
+        if (st.status === "credential_found") {
+          clearInterval(timer);
+          await api(`/api/connect/finish/${encodeURIComponent(connectSid)}`, { method: "POST" });
+          say(t("تم ربط الإضافة تلقائيًا", "Plugin linked automatically"), "ok");
+          setConnectSid(""); setConnectState(""); setConnectingId("");
+          load();
+        } else if (["cancelled", "timeout", "error", "store_failed", "linked"].includes(st.status)) {
+          clearInterval(timer);
+          say(`${st.status}: ${st.message || ""}`, st.status === "linked" ? "ok" : "warn");
+          setConnectSid(""); setConnectState(""); setConnectingId(""); load();
+        }
+      } catch (e) {
+        clearInterval(timer);
+        setConnectSid(""); setConnectState(""); setConnectingId(""); say(e.message, "error");
+      }
+    }, 1500);
+    return () => { alive = false; clearInterval(timer); };
+  }, [connectSid, load, say]);
 
   /* ---------------------------------------------------- callback + popup -- */
 
@@ -514,15 +550,13 @@ export default function PluginsPanel({ notify }) {
   const connect = (plugin) => {
     if (!plugin.oauth_supported) return;
     if (plugin.setup_required) {
-      const missing = (plugin.oauth && plugin.oauth.missing_config) || [];
-      say(
-        t(
-          `أضف ${missing.join(" و ") || "بيانات عميل OAuth"} إلى backend/.env أولاً`,
-          `Add ${missing.join(" and ") || "the OAuth client credentials"} to backend/.env first`
-        ),
-        "warn"
-      );
-      setDetail(plugin);
+      // One-time app registration. Show the form in this same tab, then go
+      // straight to the provider's consent screen after saving.
+      setOauthSetupFor(plugin);
+      setOauthForm({ client_id: "", client_secret: "" });
+      api(`/api/integrations/oauth-config/${encodeURIComponent(plugin.id)}`)
+        .then(setOauthConfig)
+        .catch((e) => say(e.message, "error"));
       return;
     }
 
@@ -531,25 +565,20 @@ export default function PluginsPanel({ notify }) {
       `/api/integrations/${encodeURIComponent(plugin.id)}/connect` +
       `?popup=1&return_to=${encodeURIComponent(returnTo)}`;
 
-    setPending((prev) => ({ ...prev, [plugin.id]: "awaiting_authorization" }));
-    let popup = null;
-    try {
-      popup = window.open(
-        url,
-        `wormgpt-oauth-${plugin.id}`,
-        "width=540,height=720,menubar=no,toolbar=no,location=no,status=no"
-      );
-    } catch {
-      popup = null;
+    if (!isLoopbackAppUrl(new URL(url, window.location.href).href)) {
+      say(t("تم حظر رابط غير آمن", "Blocked unsafe URL"), "error");
+      return;
     }
-
-    if (!popup) {
+    setPending((prev) => ({ ...prev, [plugin.id]: "awaiting_authorization" }));
+    // New tab in the same browser; the provider callback posts the result back
+    // to this page, which shows the "linked to your project" message.
+    const authTab = window.open(url, "_blank");
+    if (!authTab) {
       window.location.assign(url.replace("popup=1", "popup=0"));
       return;
     }
-
     const timer = setInterval(() => {
-      if (popup.closed) {
+      if (authTab.closed) {
         clearInterval(timer);
         setPending((prev) => {
           if (prev[plugin.id] !== "awaiting_authorization") return prev;
@@ -560,6 +589,54 @@ export default function PluginsPanel({ notify }) {
         load();
       }
     }, 1200);
+  };
+
+  const saveOauthConfig = async () => {
+    if (!oauthSetupFor) return;
+    const plugin = oauthSetupFor;
+    try {
+      const cfg = await api(
+        `/api/integrations/oauth-config/${encodeURIComponent(plugin.id)}`,
+        { method: "POST", body: JSON.stringify(oauthForm) }
+      );
+      setOauthConfig(cfg);
+      setOauthSetupFor(null);
+      say(t("تم حفظ إعداد OAuth", "OAuth client saved"), "ok");
+      connect({ ...plugin, setup_required: false, oauth: { ...(plugin.oauth || {}), configured: true, missing_config: [] } });
+    } catch (e) {
+      say(e.message, "error");
+    }
+  };
+
+  const quickConnect = async (plugin) => {
+    setBusyId(plugin.id);
+    setConnectingId(plugin.id);
+    let startedSid = "";
+    try {
+      const info = await api(`/api/connect/info/${encodeURIComponent(plugin.id)}`);
+      if (info.mode === "oauth") { setBusyId(""); return connect(plugin); }
+      if (info.mode === "manual") { setBusyId(""); return openManual(plugin); }
+      if (!isExternalBrowsableUrl(info.official_url)) {
+        say(t("تم حظر رابط غير آمن", "Blocked unsafe URL"), "error");
+        return;
+      }
+      // New tab in the same browser. This provider has no delegated OAuth
+      // callback, so the app cannot auto-link it without a key.
+      window.open(info.official_url, "_blank");
+      say(
+        t(
+          "فُتحت صفحة المزود في تبويب جديد. سجّل الدخول ثم ارجع هنا واستخدم «إعداد يدوي» لهذا المزود.",
+          "Provider opened in a new tab. Sign in, then return here and use Manual setup for this provider."
+        ),
+        "ok"
+      );
+      return;
+    } catch (e) {
+      say(e.message, "error");
+    } finally {
+      setBusyId("");
+      if (!startedSid) setConnectingId("");
+    }
   };
 
   const disconnect = async (plugin) => {
@@ -961,18 +1038,18 @@ export default function PluginsPanel({ notify }) {
                       <button
                         type="button"
                         className="btn sm primary"
-                        disabled={busy || waiting || status === "setup_required"}
+                        disabled={busy || waiting}
                         onClick={() => connect(p)}
                         title={
                           status === "setup_required"
-                            ? t("أضف بيانات عميل OAuth إلى backend/.env", "Add OAuth client credentials to backend/.env")
+                            ? t("إعداد OAuth مرة واحدة ثم موافقة في نفس التبويب", "One-time OAuth setup, then consent in this tab")
                             : t("فتح صفحة تفويض المزود", "Open the provider authorization page")
                         }
                       >
                         <Icon name="link" size={11} />
                         {waiting
                           ? t("بانتظار التفويض…", "Awaiting authorization…")
-                          : t("اتصال", "Connect")}
+                          : t("ربط", "Connect")}
                       </button>
                       <button type="button" className="btn sm ghost" disabled={busy} onClick={() => setDetail(p)}>
                         {t("تفاصيل", "Details")}
@@ -1000,6 +1077,16 @@ export default function PluginsPanel({ notify }) {
                     </>
                   ) : (
                     <>
+                      <button
+                        type="button"
+                        className="btn sm primary"
+                        disabled={busy || !!connectSid}
+                        onClick={() => quickConnect(p)}
+                        title={t("افتح الموقع الرسمي ثم عد لترى الإضافة مربوط تلقائيًا", "Open the official site, return, and the plugin links automatically")}
+                      >
+                        <Icon name="link" size={11} />
+                        {connectingId === p.id ? t("بانتظار الربط…", "Awaiting link…") : t("ربط", "Connect")}
+                      </button>
                       <button type="button" className="btn sm ghost" disabled={busy} onClick={() => openManual(p)}>
                         <Icon name="lock" size={11} />
                         {t("إعداد يدوي", "Manual setup")}
@@ -1250,6 +1337,69 @@ export default function PluginsPanel({ notify }) {
               {JSON.stringify(testResult, null, 2)}
             </pre>
           )}
+        </div>
+      )}
+
+      {/* one-time OAuth app setup, then same-tab consent */}
+      {oauthSetupFor && (
+        <div
+          style={{
+            position: "fixed", inset: 0, background: "rgba(0,0,0,.62)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            zIndex: 95, padding: 16,
+          }}
+          onMouseDown={(e) => { if (e.target === e.currentTarget) setOauthSetupFor(null); }}
+        >
+          <div role="dialog" aria-modal="true" style={{
+            width: "min(480px,100%)", background: "var(--panel)",
+            border: "1px solid var(--border-2)", borderRadius: 12,
+            padding: 16, display: "grid", gap: 10, boxShadow: "var(--shadow)",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <PluginIcon id={oauthSetupFor.id} icon={oauthSetupFor.icon} size={38} radius={9} />
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontWeight: 600, fontSize: 13.5 }}>{oauthSetupFor.name}</div>
+                <div style={{ fontSize: 10.5, color: "var(--muted)" }}>
+                  {t("إعداد OAuth مرة واحدة", "One-time OAuth setup")}
+                </div>
+              </div>
+            </div>
+            <p style={{ fontSize: 11.5, color: "var(--muted)", margin: 0, lineHeight: 1.65 }}>
+              {t(
+                "سجّل الدخول إلى حسابك في المزود، أنشئ تطبيق OAuth، ثم الصق الـ Client ID والـ Client Secret هنا مرة واحدة. بعد الحفظ سيتم تحويلك في نفس التبويب إلى صفحة الموافقة وترجع والإضافة مربوط تلقائيًا.",
+                "Sign in to the provider, create an OAuth app, then paste its Client ID and Client Secret here once. After saving, this same tab goes to the consent page and returns with the plugin linked."
+              )}
+            </p>
+            <div className="ctx-card" style={{ fontSize: 11, color: "var(--muted)", wordBreak: "break-all" }}>
+              {t("رابط الرجوع", "Redirect URI")}: <strong>{oauthConfig?.redirect_uri || "http://127.0.0.1:7777/api/integrations/callback"}</strong>
+              {oauthConfig?.docs_url && (
+                <>
+                  <br />
+                  <a href={oauthConfig.docs_url} target="_blank" rel="noreferrer">
+                    {t("كونسول المزود الرسمي", "Official provider console")}
+                  </a>
+                </>
+              )}
+            </div>
+            <input
+              className="input" placeholder={oauthConfig?.client_id_env || "CLIENT_ID"}
+              value={oauthForm.client_id}
+              onChange={(e) => setOauthForm((f) => ({ ...f, client_id: e.target.value }))}
+            />
+            <input
+              className="input" type="password" placeholder={oauthConfig?.client_secret_env || "CLIENT_SECRET"}
+              value={oauthForm.client_secret}
+              onChange={(e) => setOauthForm((f) => ({ ...f, client_secret: e.target.value }))}
+            />
+            <div style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}>
+              <button type="button" className="btn sm ghost" onClick={() => setOauthSetupFor(null)}>
+                {t("إلغاء", "Cancel")}
+              </button>
+              <button type="button" className="btn sm primary" onClick={saveOauthConfig}>
+                {t("حفظ وربط في نفس التبويب", "Save & connect in this tab")}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

@@ -3,9 +3,9 @@
   "connections": {},
   "history": [
     {
-      "id": "8c7f16c7d50674ec",
-      "at": "2026-11-19T15:37:35.642668+00:00",
-      "timestamp": 1795102655.6426742,
+      "id": "1b1f99b34204fa24",
+      "at": "2026-11-20T11:46:57.507509+00:00",
+      "timestamp": 1795175217.5075154,
       "user_id": "u1",
       "plugin_id": "github",
       "action": "connect",
@@ -14,9 +14,9 @@
       "account": "octocat"
     },
     {
-      "id": "86c0bc60dcb0941c",
-      "at": "2026-11-19T15:37:35.643589+00:00",
-      "timestamp": 1795102655.643595,
+      "id": "8077399389400956",
+      "at": "2026-11-20T11:46:57.508453+00:00",
+      "timestamp": 1795175217.5084581,
       "user_id": "u1",
       "plugin_id": "github",
       "action": "disconnect",

@@ -90,6 +90,9 @@ export default function App(){
   const [streamText,setStreamText]=useState("");
   const [authRequired,setAuthRequired]=useState(false);
   const [authToken,setAuthToken]=useState(()=>localStorage.getItem("🔥😈 PORT 777 EVIL ☠️🔥👹_token"));
+  const [projectPath,setProjectPath]=useState(()=>localStorage.getItem("port777_project")||"");
+  const [projectInput,setProjectInput]=useState("");
+  const [projectWorkspaces,setProjectWorkspaces]=useState([]);
   const authHeaders=useCallback((json=true)=>{ const h={}; if(json) h["Content-Type"]="application/json"; if(authToken) h.Authorization=`Bearer ${authToken}`; return h; },[authToken]);
   const [voiceReplies,setVoiceReplies]=useState(()=>!!initPrefs.voiceReplies);
   const [settingsOpen,setSettingsOpen]=useState(false);
@@ -252,6 +255,7 @@ export default function App(){
   },[authToken]);
 
   useEffect(()=>{ refreshStatus(true,"boot"); refreshHistory(); refreshWorkspaces(); },[refreshStatus,refreshHistory,refreshWorkspaces]);
+  useEffect(()=>{ fetch("/api/workspace/list").then(r=>r.json()).then(d=>setProjectWorkspaces(Array.isArray(d?.workspaces)?d.workspaces:[])).catch(()=>{}); },[]);
 
   useEffect(()=>{ const onOnline=()=>refreshStatus(true,"online"); const onOffline=()=>{ setConnection({state:"disconnected",detail:"offline"}); wasDisconnectedRef.current=true; }; window.addEventListener("online",onOnline); window.addEventListener("offline",onOffline); return ()=>{ window.removeEventListener("online",onOnline); window.removeEventListener("offline",onOffline); }; },[refreshStatus]);
 
@@ -392,7 +396,7 @@ export default function App(){
     root.dataset.lang = lang;
     root.lang = lang;
     root.dir = lang === "ar" ? "rtl" : "ltr";
-    document.title = lang === "ar" ? "PORT 777 — مساحة الذكاء الاصطناعي" : "PORT 777 — AI Workspace";
+  document.title = "🔥😈 PORT 777 EVIL ☠️🔥👹";
   },[theme,lang]);
 
   const toggleTheme = useCallback(()=>setTheme(t=>t==="dark"?"light":"dark"),[]);
@@ -594,7 +598,7 @@ export default function App(){
     const execPayload = (execEnv && execEnv !== "off")
       ? { exec_env: execEnv, ...(reuseTask ? { exec_task_id: reuseTask } : {}), exec_approved: false }
       : {};
-      const res=await fetch("/api/chat",{method:"POST",headers:authHeaders(),signal:ctrl.signal,body:JSON.stringify({message:finalText,session_id:sessionId,model:chatModel,model_route:route,mode:composerMode,full_access:fullAccess,attachments:(payload.attachments||[]),...execPayload})});
+      const res=await fetch("/api/chat",{method:"POST",headers:authHeaders(),signal:ctrl.signal,body:JSON.stringify({message:finalText,session_id:sessionId,model:chatModel,model_route:route,mode:composerMode,full_access:fullAccess,project_path:projectPath,attachments:(payload.attachments||[]),...execPayload})});
       if(res.status===401){ toast.error("Ø§Ù„Ù…ØµØ§Ø¯Ù‚Ø© Ù…Ø·Ù„ÙˆØ¨Ø© Ù„Ù„Ø¥Ø¬Ø±Ø§Ø¡Ø§Øª Ø§Ù„Ù…Ø­Ù…ÙŠØ© Ø£Ùˆ Full Access."); setMessages(m=>[...m,{role:"assistant",content:"Authentication required for protected/full-access actions. Ø§ÙØªØ­ Settings > General ÙˆØ³Ø¬Ù‘Ù„ Ø§Ù„Ø¯Ø®ÙˆÙ„."}]); return; }
       if(!res.ok){ const t=await res.text().catch(()=>res.statusText); throw new Error(`HTTP ${res.status}: ${t.slice(0,220)}`); }
       const reader=res.body.getReader(); const dec=new TextDecoder(); let buf="";
@@ -851,7 +855,7 @@ export default function App(){
                   <div className="msg2 assistant">
                     <div className="msg-avatar"><Icon name="spark" size={14} /></div>
                     <div className="msg-main">
-                      <div className="msg-head"><span className="who">PORT 777</span><span className="tag">AI</span><span style={{ color: "var(--accent)" }}>{String(status.state || "working").replace(/_/g, " ")}</span></div>
+                      <div className="msg-head"><span className="who">🔥😈 PORT 777 EVIL ☠️🔥👹</span><span className="tag">AI</span><span style={{ color: "var(--accent)" }}>{String(status.state || "working").replace(/_/g, " ")}</span></div>
                       <div className="bubble2 streaming"><Markdown text={streamText} /><span className="cursor" /></div>
                       <div className="msg-actions"><button type="button" className="mini-btn" onClick={() => abortRef.current?.abort()}><Icon name="stop" size={12} />Stop</button></div>
                     </div>
@@ -862,7 +866,7 @@ export default function App(){
                   <div className="msg2 assistant">
                     <div className="msg-avatar"><Icon name="spark" size={14} /></div>
                     <div className="msg-main">
-                      <div className="msg-head"><span className="who">PORT 777</span><span className="tag">AI</span></div>
+                      <div className="msg-head"><span className="who">🔥😈 PORT 777 EVIL ☠️🔥👹</span><span className="tag">AI</span></div>
                       <div className="bubble2"><span className="muted">{t("جارٍ التفكير…", "Thinking…")}</span> <span className="cursor" /></div>
                     </div>
                   </div>
@@ -896,6 +900,17 @@ export default function App(){
               </div>
             )}
           </div>
+        </div>
+
+        <div style={{ maxWidth: "var(--composer-max)", margin: "0 auto 6px", width: "100%", padding: "0 24px", display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
+          <Icon name="folder" size={13} />
+          <span style={{ fontSize: 11, color: "var(--muted)" }}>{t("المشروع النشط", "Active project")}</span>
+          <select className="input" style={{ maxWidth: 260 }} value={projectPath} onChange={(e) => { setProjectPath(e.target.value); localStorage.setItem("port777_project", e.target.value); }}>
+            <option value="">{t("بدون مشروع", "No project")}</option>
+            {projectWorkspaces.map((w) => <option key={w.workspace_id} value={w.path}>{w.workspace_id} · {w.path}</option>)}
+          </select>
+          <input className="input" style={{ flex: 1, minWidth: 160 }} placeholder="D:/path/to/project" value={projectInput} onChange={(e) => setProjectInput(e.target.value)} />
+          <button type="button" className="btn sm ghost" onClick={() => { const v = projectInput.trim(); if (v) { setProjectPath(v); localStorage.setItem("port777_project", v); } }}>{t("اختيار", "Select")}</button>
         </div>
 
         {connection.state !== "connected" && (

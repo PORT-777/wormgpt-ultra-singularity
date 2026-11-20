@@ -14,6 +14,11 @@ tool_modules = collect_submodules("tools")
 
 # --- Collect all hidden imports ---
 hiddenimports = [
+    "backend",
+    "backend.main",
+    "configs",
+    "platform_secrets",
+    "api.vendor",
     "fastapi",
     "uvicorn",
     "uvicorn.loop",
@@ -122,6 +127,10 @@ datas = [
     (os.path.join(BACKEND_DIR, "skills_packs"), "skills_packs"),
     # Include data directory (for audit.jsonl etc.)
     (os.path.join(BACKEND_DIR, "data"), "data"),
+    # Built frontend served by backend.main
+    (os.path.join(os.path.dirname(BACKEND_DIR), "frontend", "dist"), "frontend/dist"),
+    # Branding
+    (os.path.join(os.path.dirname(BACKEND_DIR), "frontend", "public", "icon.svg"), "frontend/public"),
 ]
 
 a = Analysis(
@@ -172,7 +181,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=None,
+    icon=os.path.join(os.path.dirname(BACKEND_DIR), "frontend", "public", "icon.svg"),
     version_file=None,
     manifest=None,
     uac_admin=False,

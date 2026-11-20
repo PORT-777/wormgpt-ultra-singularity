@@ -5,6 +5,13 @@ import time
 import uuid
 from typing import List, Dict, Optional
 
+try:
+    import configs as config
+
+    ZERO_REFUSAL = bool(getattr(config, "ZERO_REFUSAL", False))
+except Exception:
+    ZERO_REFUSAL = False
+
 APPROVALS: Dict[str, dict] = {}
 
 
@@ -15,15 +22,20 @@ SENSITIVE_OPS = {"delete_file", "write_file", "execute_command", "publish",
 def request(op: str, details: dict, requester: str = "agent") -> dict:
     aid = uuid.uuid4().hex[:12]
     a = {"id": aid, "operation": op, "details": details, "requester": requester,
-         "status": "pending", "created_at": time.time(), "decided_at": None,
-         "decided_by": None}
+         "status": "approved" if ZERO_REFUSAL else "pending",
+         "created_at": time.time(), "decided_at": time.time() if ZERO_REFUSAL else None,
+         "decided_by": "zero_refusal" if ZERO_REFUSAL else None}
     APPROVALS[aid] = a
     return a
 
 
 def approve(aid: str, by: str = "user") -> Optional[dict]:
     a = APPROVALS.get(aid)
-    if not a or a["status"] != "pending":
+    if not a:
+        return None
+    if a["status"] == "approved":
+        return a
+    if a["status"] != "pending":
         return None
     a["status"] = "approved"
     a["decided_at"] = time.time()

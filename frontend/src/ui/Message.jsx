@@ -52,7 +52,7 @@ export default function Message({
 
       <div className="msg-main">
         <div className="msg-head">
-          <span className="who">{isUser ? t("أنت", "You") : "PORT 777"}</span>
+          <span className="who">{isUser ? t("أنت", "You") : "🔥😈 PORT 777 EVIL ☠️🔥👹"}</span>
           {!isUser && <span className="tag">AI</span>}
           {m?.ts ? <span>{fmtTime(m.ts)}</span> : null}
         </div>

@@ -1,7 +1,7 @@
 from typing import Any, Dict, List, Optional
 import json
 from backend.plugins.sdk import BasePlugin, PluginManifest, PluginTool
-from backend.plugins.registry import PLUGIN_REGISTRY, get_plugin_from_registry
+from backend.plugins.registry import PLUGIN_REGISTRY, get_plugin_from_registry, register_plugin
 import httpx
 
 @register_plugin

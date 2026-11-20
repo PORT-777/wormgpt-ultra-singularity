@@ -9,24 +9,24 @@
       "scopes": [
         "repo"
       ],
-      "expires_at": 1795106255.5976608,
+      "expires_at": 1795178817.4966733,
       "account_id": "42",
       "account_name": "octocat",
       "account_email": "octo@example.com",
       "workspace_name": null,
       "status": "connected",
       "last_error": null,
-      "created_at": "2026-11-19T15:37:35.596558+00:00",
-      "updated_at": "2026-11-19T15:37:35.597672+00:00",
-      "last_refreshed_at": "2026-11-19T15:37:35Z",
-      "secrets": "Z0FBQUFBQnFfeGVfVTA0a1NEM1hLczdZemF5bUlHTkFUTVNBUzUxb21nRVFwQ1NDY2gyeXZRRi10V05UZDIzLTZGS0lfQnpiNzRPRjNHdlB5TDBUUlk4cDBrSVVGUklvTUlSMkEydWVPQWhBS0ExNnV6OUt2aDFCWHFmaWNsUHBoNkRqSGxIRm9Pa1dqVmtLQ2hzajYyc21KeGFzUjJKSW1QT3J6U3BNV2tTZ0JnLU9SenhsSmQ4ZGZhbzdPS1hlU05Zc2l0bjJsQlNu"
+      "created_at": "2026-11-20T11:46:57.495533+00:00",
+      "updated_at": "2026-11-20T11:46:57.496684+00:00",
+      "last_refreshed_at": "2026-11-20T11:46:57Z",
+      "secrets": "Z0FBQUFBQnJBRE14a0N4S3dlSDM4OGJ0TUYzQzlfYTBYbzI4bHNBRk4tRU9yS19IZXpHY0JqSy1aNF9GZko3V0Z4UGFPOXdybEFPMy1zVHo4M09jNnlBT0gtY0RnWTYyZnBuNzJRYzh3SjBxaDd1b3c0ekNCMXhpN3VoY0ZuY05jdE8wOFRndWJJVDd3RjNCNE1NVkdMZFRrbnBMMG9tNjdjTEJ0Yjc5dUdSZjh5TFdQUmJJNVVnMGFrOS1wUUVqdkpkZ2Y0WDVEYlFl"
     }
   },
   "history": [
     {
-      "id": "e5ddb4673a731506",
-      "at": "2026-11-19T15:37:35.597086+00:00",
-      "timestamp": 1795102655.5970914,
+      "id": "f72f2a3d857179f9",
+      "at": "2026-11-20T11:46:57.496080+00:00",
+      "timestamp": 1795175217.4960856,
       "user_id": "u1",
       "plugin_id": "github",
       "action": "connect",
@@ -35,9 +35,9 @@
       "account": "octocat"
     },
     {
-      "id": "4bb92955d681e881",
-      "at": "2026-11-19T15:37:35.598138+00:00",
-      "timestamp": 1795102655.5981443,
+      "id": "679c6e5803c02d7e",
+      "at": "2026-11-20T11:46:57.497143+00:00",
+      "timestamp": 1795175217.497149,
       "user_id": "u1",
       "plugin_id": "github",
       "action": "refresh",

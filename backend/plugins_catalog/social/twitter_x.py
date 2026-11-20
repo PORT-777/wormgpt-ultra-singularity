@@ -19,13 +19,13 @@ class TwitterXPlugin(BasePlugin):
         auth_type="oauth2",
         auth_config={"auth_method": "oauth2"},
         tools=[
-            PluginTool(name="twitter.post", description="Post a tweet/X post", parameters={"text": {"type": "string"}}),
-            PluginTool(name="twitter.search", description="Search tweets for keyword or hashtag", parameters={"query": {"type": "string"}}),
-            PluginTool(name="twitter.getUser", description="Get user profile information", parameters={"username": {"type": "string"}}),
-            PluginTool(name="twitter.getUserTweets", description="Get recent tweets from a user", parameters={"username": {"type": "string"}}),
-            PluginTool(name="twitter.monitorKeyword", description="Set up keyword monitoring alert", parameters={"keyword": {"type": "string"}}),
-            PluginTool(name="twitter.getTrends", description="Get trending topics by location", parameters={"location": {"type": "string"}}),
-            PluginTool(name="twitter.sendDM", description="Send direct message", parameters={"user_id": {"type": "string"}, "text": {"type": "string"}}),
+            PluginTool(name="twitter_x.post", description="Post a tweet/X post", parameters={"text": {"type": "string"}}),
+            PluginTool(name="twitter_x.search", description="Search tweets for keyword or hashtag", parameters={"query": {"type": "string"}}),
+            PluginTool(name="twitter_x.getUser", description="Get user profile information", parameters={"username": {"type": "string"}}),
+            PluginTool(name="twitter_x.getUserTweets", description="Get recent tweets from a user", parameters={"username": {"type": "string"}}),
+            PluginTool(name="twitter_x.monitorKeyword", description="Set up keyword monitoring alert", parameters={"keyword": {"type": "string"}}),
+            PluginTool(name="twitter_x.getTrends", description="Get trending topics by location", parameters={"location": {"type": "string"}}),
+            PluginTool(name="twitter_x.sendDM", description="Send direct message", parameters={"user_id": {"type": "string"}, "text": {"type": "string"}}),
         ],
         website_url="https://twitter.com",
         docs_url="https://developer.twitter.com/en/docs",
@@ -41,24 +41,24 @@ class TwitterXPlugin(BasePlugin):
         headers = {"Authorization": f"Bearer {token}"}
         
         async with httpx.AsyncClient() as client:
-            if tool_name == "twitter.post":
+            if tool_name == "twitter_x.post":
                 url = "https://api.twitter.com/2/tweets"
                 payload = {"text": parameters['text']}
                 resp = await client.post(url, headers=headers, json=payload)
-            elif tool_name == "twitter.search":
+            elif tool_name == "twitter_x.search":
                 url = "https://api.twitter.com/2/tweets/search/recent"
                 payload = {"query": parameters['query']}
                 resp = await client.get(url, headers=headers, params=payload)
-            elif tool_name == "twitter.getUser":
+            elif tool_name == "twitter_x.getUser":
                 url = f"https://api.twitter.com/2/users/by/username/{parameters['username']}"
                 resp = await client.get(url, headers=headers)
-            elif tool_name == "twitter.getUserTweets":
+            elif tool_name == "twitter_x.getUserTweets":
                 url = f"https://api.twitter.com/2/users/{parameters['user_id']}/tweets"
                 resp = await client.get(url, headers=headers)
-            elif tool_name == "twitter.getTrends":
+            elif tool_name == "twitter_x.getTrends":
 # Mock implementation for trend lookup
                 return {"trends": ["#CyberSecurity", "#Hacking", "#Tech"]}
-            elif tool_name == "twitter.sendDM":
+            elif tool_name == "twitter_x.sendDM":
                 # Placeholder for DM implementation
                 return {"status": "DM sent successfully"}
             else:

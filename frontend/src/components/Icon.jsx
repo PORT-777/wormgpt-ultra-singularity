@@ -77,6 +77,16 @@ const paths = {
   bookmark:<P d="M6 3h12v18l-6-4.5L6 21Z"/>,
   inbox:<><P d="M3 12h5l2 3h4l2-3h5"/><P d="M5 5h14l2 7v6a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-6Z"/></>,
   filter:<P d="M3 5h18l-7 8v6l-4-2v-4Z"/>,
+  rocket:<><P d="M5 15c-1.5 1.5-2 5-2 5s3.5-.5 5-2"/><P d="M9 17c-3-3-3-8 2-13 5 0 9 4 9 9-5 5-10 5-13 2"/><circle cx="15" cy="9" r="1.6" fill="currentColor"/></>,
+  flame:<><P d="M12 22c4 0 7-3 7-7 0-4-3-6-4-9-1 2-2 2.5-3 3.5C11 7 10 5 9 3c-2 3-4 6-4 12 0 4 3 7 7 7Z"/><P d="M12 22c2 0 3.5-1.5 3.5-3.5 0-2-1.5-3-2.5-4.5-1 1.5-2 2-2 3.5C11 20 10 20 10 20c0 1.2 1 2 2 2Z"/></>,
+  crown:<><P d="m3 7 4.5 4L12 4l4.5 7L21 7l-2 11H5Z"/><P d="M6 20h12"/></>,
+  eye:<><P d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"/><circle cx="12" cy="12" r="2.6" fill="none" stroke="currentColor" strokeWidth="1.8"/></>,
+  heart:<P d="M12 20s-8-4.5-8-10a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.5-8 10-8 10Z"/>,
+  compass:<><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="1.8"/><P d="m15.5 8.5-2 5-5 2 2-5Z"/></>,
+  puzzle:<><P d="M9 3h6v3a2 2 0 1 0 4 0h2v6h-3a2 2 0 1 0 0 4h3v5H9v-3a2 2 0 1 0-4 0H3v-9h3a2 2 0 1 0 0-4H3V3h6Z"/></>,
+  orbit:<><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" strokeWidth="1.8"/><ellipse cx="12" cy="12" rx="10" ry="4.5" fill="none" stroke="currentColor" strokeWidth="1.6" transform="rotate(-25 12 12)"/></>,
+  diamond:<><P d="m12 3 9 7-9 11L3 10Z"/><P d="M3 10h18M9 3l-2 7 5 11 5-11-2-7"/></>,
+  key:<><circle cx="8" cy="15" r="4" fill="none" stroke="currentColor" strokeWidth="1.8"/><P d="m11 12 8-8m-3 2 2 2m-5 1 2 2"/></>,
 };
 export default function Icon({name,size=16,className="",...props}){
   return <svg aria-hidden="true" width={size} height={size} viewBox="0 0 24 24" className={className} {...props}>{paths[name]??paths.spark}</svg>;

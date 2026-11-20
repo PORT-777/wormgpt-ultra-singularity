@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import Icon from "./Icon.jsx";
 import { t } from "../ui/i18n.js";
+import { GLYPH_ICONS } from "./pluginIcons.js";
 
 /**
  * PluginIcon - Renders brand-aware icons for plugins.
@@ -53,7 +54,6 @@ export default function PluginIcon({ id, icon, size = 24, radius = 6, ...props }
   }
 
   // Glyph fallback
-  const { GLYPH_ICONS } = require("./pluginIcons.js");
   const glyph = GLYPH_ICONS?.[id];
 
   if (glyph) {

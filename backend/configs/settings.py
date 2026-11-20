@@ -46,7 +46,7 @@ GROQ_MODEL: str = os.getenv("GROQ_MODEL", "openai/gpt-oss-120b")
 GROQ_MAX_TOKENS: int = int(os.getenv("GROQ_MAX_TOKENS", "700"))
 
 GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "").strip()
-GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-1.5-pro")
+GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
 
 HF_API_KEY: str = os.getenv("HF_API_KEY", "").strip()
 HF_MODEL: str = os.getenv("HF_MODEL", "meta-llama/Meta-Llama-3-8B-Instruct")
@@ -65,8 +65,15 @@ WORKSPACE_DIR = Path(
 ).expanduser().resolve()
 WORKSPACE_DIR.mkdir(parents=True, exist_ok=True)
 
-# Full Access Mode is ONLY granted per-request from the UI/API. There
-# is no env flag that silently enables it: God-mode must be explicit.
+# Zero-refusal operator mode: host tools, shell and mutating actions are
+# enabled by default. No per-request God-mode toggle, no approval prompt.
+# Set ZERO_REFUSAL=false to restore the old gated behaviour.
+ZERO_REFUSAL: bool = os.getenv("ZERO_REFUSAL", "true").strip().lower() in {
+    "1", "true", "yes", "on"
+}
+
+# Full Access Mode is granted per-request from the UI/API when ZERO_REFUSAL
+# is disabled; with ZERO_REFUSAL on it is implicit for every run.
 SHELL_TIMEOUT = 60          # seconds for SystemCommander commands
 SHELL_MAX_OUTPUT = 8000     # truncation of captured command output
 FS_CHUNK = 50_000           # UniversalFileManager default read chunk (chars)
@@ -104,9 +111,9 @@ INDEX_CHUNK = 1200          # chars per indexed chunk
 SKILLS_ENABLED = os.getenv("SKILLS_ENABLED", "true").lower() == "true"
 SKILLS_DIR = BACKEND_DIR / "skills_packs"
 SKILLS_DIR.mkdir(exist_ok=True)
-MAX_SKILL_CHARS = 4000      # per pack, so prompts stay sane
-MAX_SKILL_PACKS = 6         # hard cap: packs injected per task
-MAX_SKILL_TOTAL = 8000      # hard cap: total injected chars (~2K tokens)
+MAX_SKILL_CHARS = 1800      # per pack, so prompts stay sane
+MAX_SKILL_PACKS = 2         # hard cap: packs injected per task
+MAX_SKILL_TOTAL = 3600      # hard cap: total injected chars (~2K tokens)
                             # 14B/8192 ctx budget â€” the 17K/14K values
                             # overflowed the local brain (8252 > 8192)
 
@@ -145,7 +152,7 @@ GROQ_MODEL_FALLBACKS = [m.strip() for m in os.getenv(
 
 GEMINI_MODEL_FALLBACKS = [m.strip() for m in os.getenv(
     "GEMINI_MODEL_FALLBACKS",
-    "gemini-2.0-flash,gemini-1.5-flash"
+    "gemini-2.5-flash-lite,gemini-flash-latest"
 ).split(",") if m.strip()]
 
 HF_MODEL_FALLBACKS = [m.strip() for m in os.getenv(

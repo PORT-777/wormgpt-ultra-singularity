@@ -57,7 +57,7 @@ class ElasticPlugin(BasePlugin):
                 url = f"https://{host}:9200/security_alerts/_search"
                 resp = await client.get(url, headers=headers)
             elif tool_name == "elastic.createRule":
-url = f"https://{host}:9200/security/api/rules"
+                url = f"https://{host}:9200/security/api/rules"
                 payload = {
                     "name": parameters['name'],
                     "query": parameters['query'],

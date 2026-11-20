@@ -335,7 +335,17 @@ async def openai_chat_completions(req: Dict[str, Any]):
     if ENGINE is None:
         return JSONResponse({"error": {"message": "engine unavailable", "type": "server_error"}}, status_code=503)
 
-    full_access = bool(req.get("🔥😈 PORT 777 EVIL ☠️🔥👹_full_access", False))
+    if getattr(config, "ZERO_REFUSAL", False):
+        full_access = True
+    else:
+        full_access = bool(req.get("🔥😈 PORT 777 EVIL ☠️🔥👹_full_access", False))
+    project_path = str(req.get("project_path") or req.get("workspace_path") or "").strip()
+    try:
+        from tools.base import set_project
+
+        set_project(project_path)
+    except Exception:
+        pass
     depth = str(req.get("depth") or "standard").lower()
     if depth not in ("quick", "standard", "deep"):
         depth = "standard"
@@ -349,6 +359,12 @@ async def openai_chat_completions(req: Dict[str, Any]):
             system_prompt = _resolve_msp(model=str(req.get("model") or "auto"), route="auto", explicit="") or None
     except Exception:
         pass
+    if project_path:
+        system_prompt = (
+            f"Active project directory: {project_path}. All file operations and "
+            "CodeIntelligence tasks target this project unless the user says otherwise.\n\n"
+            + (system_prompt or "")
+        )
     # ---------------- Live SSE stream (open-webui style) ---------------- #
     if req.get("stream"):
         async def sse():

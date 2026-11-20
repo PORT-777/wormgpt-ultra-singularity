@@ -60,7 +60,7 @@ class DiscordPlugin(BasePlugin):
                 files = {'file': ('report.txt', file_resp.content)}
                 data = {'content': parameters.get('content', '')}
                 resp = await client.post(webhook_url, data=data, files=files)
-else:
+            else:
                 raise ValueError(f"Unknown tool: {tool_name}")
 
             resp.raise_for_status()

@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 ﻿# 🔥😈 PORT 777 EVIL ☠️🔥👹 v6 :: Universal Files + Intelligence Inputs Protocol
 
 v5 (crew, deep RAG, scoped god-mode, voice, scheduler, audit, docker) +
@@ -26,6 +25,29 @@ Ownership boundary (unchanged, by design): the agent helps you build +
 debug **your own** software and analyze/learn from code and binaries you
 own or are licensed to. It does not produce cheating tooling for online
 multiplayer games, anti-cheat evasion, or DRM/licensing circumvention.
+
+---
+
+## Current deployment notes
+
+- **Zero-refusal mode:** `ZERO_REFUSAL=true` in `backend/.env` grants host tools, shell and mutating actions by default; no per-request God-mode toggle or approval prompt. Set it to `false` to restore the gated behaviour.
+- **Vendored references:** AutoGPT, Claude Skills, OpenHands, ECC and Hermes Agent are checked out under `vendor/`. See them in the UI under Advanced tools → Vendored repos, or via `GET /api/vendor/repos`.
+
+## Release-readiness roadmap (no builds performed)
+
+Suggested next upstream: `tauri-apps/tauri` — one React/Vite codebase can target web, Windows `.exe` and Android `.apk`, which matches this project's stack better than Electron + Cordova.
+
+Features to add before any build:
+- PWA/service-worker shell with offline cache and installable web app.
+- Responsive/touch layout and safe-area handling for Android.
+- PyInstaller one-file backend spec with bundled models/keys path, plus a service wrapper.
+- GitHub Actions matrix: web bundle, Windows exe, Android APK artifacts.
+- Secure secret storage per platform (Credential Manager / Keystore), replacing plain `.env` writes for OAuth clients.
+- Auto-update endpoint, crash reports, and signed plugin manifests.
+- Local uncensored model packaging (llama.cpp) so the zero-refusal brain works offline.
+- **OAuth linking:** Connect opens a new browser tab on the provider's consent page; the callback posts the result back and shows a linked message in the original page. One-time Client ID/Secret setup is handled in the inline dialog.
+- **UI polish:** `frontend/src/ui/port777-polish.css` adds themed icons, hover motion and card animations; can be disabled with `prefers-reduced-motion`.
+- **Tests:** `pytest -q` → 201 passed, 18 failed. Remaining failures are in `test_phase2_providers.py` (Splunk/Teams plugins implement an older, simpler API than the suite expects) plus 7 engine/orchestration regressions. Collection errors and pytest import paths were fixed.
 
 ---
 
@@ -214,6 +236,10 @@ Without the toggle, those tools reply `denied â€” requires FULL ACCESS mode
 - Docker/gVisor boxing for PythonInterpreter.
 - Parallel subtask execution (asyncio.gather) for independent plan steps.
 - Token-level streaming for the fastest possible UI feedback.
-=======
 # WormGPT_Ultra_Singularity
->>>>>>> 96b12ce476e5d8163ff77dea5bdc0809bce6fc93
+
+Run (from the project root, backend on port 7777):
+```bash
+.\backend\.venv\Scripts\python.exe -m uvicorn backend.main:app --host 127.0.0.1 --port 7777
+```
+Open http://127.0.0.1:7777/ . The frontend build in `frontend/dist` is served by the backend.

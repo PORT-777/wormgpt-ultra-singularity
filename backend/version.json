@@ -1,0 +1,7 @@
+{
+  "version": "6.1.0",
+  "channel": "local",
+  "release_notes": "Zero-refusal engine, one-click OAuth linking, vendored references, PWA shell.",
+  "update_url": "",
+  "published": "2026-11-20"
+}

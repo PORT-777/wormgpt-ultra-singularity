@@ -19,3 +19,16 @@ workspace/
 backend/memory_data/
 # sqlite + audit trail
 backend/data/
+# encrypted platform secrets
+backend/data/.platform_secrets.enc
+# local dev crypto keys — never commit
+.plugin_key
+backend/.plugin_key
+# packaged artifacts
+src-tauri/target/
+*.msi
+*.apk
+*.exe
+*.appimage
+# local models
+backend/models/*.gguf

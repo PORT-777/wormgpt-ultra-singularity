@@ -85,7 +85,7 @@ def status() -> Dict[str, Any]:
     servers = cfg.get("servers", {}) or {}
     return {
         "enabled": bool(getattr(config, "MCP_ENABLED", False)),
-        "execution_requires_full_access": True,
+        "execution_requires_full_access": not bool(getattr(config, "ZERO_REFUSAL", False)),
         "sdk": _sdk_status(),
         "config_path": str(_config_path()),
         "server_count": len(servers),
