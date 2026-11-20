@@ -1,0 +1,23 @@
+---
+name: int-h4cker-cybersecurity-domains-labs-practice-capture-the-flag
+description: "Cybersecurity intel: cybersecurity-domains / labs-practice / capture-the-flag (The-Art-of-Hacking/h4cker)"
+trigger_when: "h4cker,cybersecurity-domains,labs-practice,capture-the-flag,capture,flag,information,best,resources,some,others"
+source: h4cker
+---
+## Capture The Flag (CTF) Information
+Capture the flag (CTF) is a computer security competition that is designed for educational purposes. In Lesson 6.4, "Learning How to Host Enterprise Capture the Flag Events" of the "Enterprise Penetration Testing and Continuous Monitoring (the Art of Hacking Series) LiveLessons" video course, you learned how these CTF work and how you can potentially create these as a "cyber range" within your enterprise. The following are a few links that provide numerous resources and references to past and current CTF events, as well as online practice sites.
+
+### This is one of the best resources: 
+* https://github.com/apsdehal/awesome-ctf
+
+### Some others:
+* https://github.com/momenbasel/htb-writeups - Comprehensive Hack The Box writeup collection covering 500+ machines, 400+ challenges, ProLabs, Sherlocks, CTF events, and certification prep
+* https://trailofbits.github.io/ctf/
+* https://ctftime.org
+* https://ctf365.com
+* http://captf.com
+* https://pentesterlab.com/exercises
+* http://vulnhub.com
+* https://challenges.re
+* http://cryptopals.com
+* https://github.com/CTFd/CTFd

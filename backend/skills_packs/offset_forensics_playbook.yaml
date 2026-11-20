@@ -1,0 +1,23 @@
+name: offset_forensics_playbook
+description: How to derive, verify and cite offsets/addresses for the user's own software.
+trigger_when: [offset, offsets, struct, struct layout, structure layout, address, alignment, padding, sizeof, memory layout, reverse engineering, binary analysis, hexdump, disassembly]
+instructions: |
+  When a task involves addresses, offsets or struct layouts, follow this
+  evidence ladder — in order — before writing ANY number:
+
+  1. EVIDENCE FIRST. Never reason a value out of thin air. Obtain each
+     number from one of:
+       - UniversalFileManager  action=hex      -> raw bytes at an offset
+       - UniversalFileManager  action=search/read -> header/struct sources
+       - MemoryLogicCalculator op=struct_offset/chain -> derived math
+       - IntegrityGuard verify_baseline    -> confirm which build you are
+         even analyzing (stale builds invalidate every offset)
+  2. LABEL every number you print with its source, e.g.
+     "0x20 (struct_offset: after u32 id + u8 len + pad)".
+  3. CROSS-CHECK struct total size: sum of fields + padding must equal
+     sizeof(struct) read from the source or hexdump. A mismatch means
+     the layout guess is WRONG — redo the alignment, do not ship it.
+  4. OFFSETS FOR THE USER'S OWN BUILD ONLY: if the binary's sha256 does
+     not match the build the task describes, say so and stop.
+  5. If a value cannot be derived from available materials, write
+     "COULD NOT VERIFY: <why>" — never output a plausible-looking value.

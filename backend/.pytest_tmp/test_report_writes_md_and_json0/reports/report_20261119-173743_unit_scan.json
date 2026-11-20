@@ -1,0 +1,24 @@
+{
+  "title": "unit scan",
+  "generated": "20261119-173743",
+  "counts": {
+    "critical": 1,
+    "info": 1
+  },
+  "findings": [
+    {
+      "title": "f1",
+      "target": "-",
+      "severity": "critical",
+      "evidence": "e1",
+      "remediation": "r1"
+    },
+    {
+      "title": "f2",
+      "target": "-",
+      "severity": "info",
+      "evidence": "",
+      "remediation": ""
+    }
+  ]
+}

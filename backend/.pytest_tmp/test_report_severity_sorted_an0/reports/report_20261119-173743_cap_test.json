@@ -1,0 +1,429 @@
+{
+  "title": "cap test",
+  "generated": "20261119-173743",
+  "counts": {
+    "medium": 60
+  },
+  "findings": [
+    {
+      "title": "f0",
+      "target": "-",
+      "severity": "medium",
+      "evidence": "",
+      "remediation": ""
+    },
+    {
+      "title": "f1",
+      "target": "-",
+      "severity": "medium",
+      "evidence": "",
+      "remediation": ""
+    },
+    {
+      "title": "f2",
+      "target": "-",
+      "severity": "medium",
+      "evidence": "",
+      "remediation": ""
+    },
+    {
+      "title": "f3",
+      "target": "-",
+      "severity": "medium",
+      "evidence": "",
+      "remediation": ""
+    },
+    {
+      "title": "f4",
+      "target": "-",
+      "severity": "medium",
+      "evidence": "",
+      "remediation": ""
+    },
+    {
+      "title": "f5",
+      "target": "-",
+      "severity": "medium",
+      "evidence": "",
+      "remediation": ""
+    },
+    {
+      "title": "f6",
+      "target": "-",
+      "severity": "medium",
+      "evidence": "",
+      "remediation": ""
+    },
+    {
+      "title": "f7",
+      "target": "-",
+      "severity": "medium",
+      "evidence": "",
+      "remediation": ""
+    },
+    {
+      "title": "f8",
+      "target": "-",
+      "severity": "medium",
+      "evidence": "",
+      "remediation": ""
+    },
+    {
+      "title": "f9",
+      "target": "-",
+      "severity": "medium",
+      "evidence": "",
+      "remediation": ""
+    },
+    {
+      "title": "f10",
+      "target": "-",
+      "severity": "medium",
+      "evidence": "",
+      "remediation": ""
+    },
+    {
+      "title": "f11",
+      "target": "-",
+      "severity": "medium",
+      "evidence": "",
+      "remediation": ""
+    },
+    {
+      "title": "f12",
+      "target": "-",
+      "severity": "medium",
+      "evidence": "",
+      "remediation": ""
+    },
+    {
+      "title": "f13",
+      "target": "-",
+      "severity": "medium",
+      "evidence": "",
+      "remediation": ""
+    },
+    {
+      "title": "f14",
+      "target": "-",
+      "severity": "medium",
+      "evidence": "",
+      "remediation": ""
+    },
+    {
+      "title": "f15",
+      "target": "-",
+      "severity": "medium",
+      "evidence": "",
+      "remediation": ""
+    },
+    {
+      "title": "f16",
+      "target": "-",
+      "severity": "medium",
+      "evidence": "",
+      "remediation": ""
+    },
+    {
+      "title": "f17",
+      "target": "-",
+      "severity": "medium",
+      "evidence": "",
+      "remediation": ""
+    },
+    {
+      "title": "f18",
+      "target": "-",
+      "severity": "medium",
+      "evidence": "",
+      "remediation": ""
+    },
+    {
+      "title": "f19",
+      "target": "-",
+      "severity": "medium",
+      "evidence": "",
+      "remediation": ""
+    },
+    {
+      "title": "f20",
+      "target": "-",
+      "severity": "medium",
+      "evidence": "",
+      "remediation": ""
+    },
+    {
+      "title": "f21",
+      "target": "-",
+      "severity": "medium",
+      "evidence": "",
+      "remediation": ""
+    },
+    {
+      "title": "f22",
+      "target": "-",
+      "severity": "medium",
+      "evidence": "",
+      "remediation": ""
+    },
+    {
+      "title": "f23",
+      "target": "-",
+      "severity": "medium",
+      "evidence": "",
+      "remediation": ""
+    },
+    {
+      "title": "f24",
+      "target": "-",
+      "severity": "medium",
+      "evidence": "",
+      "remediation": ""
+    },
+    {
+      "title": "f25",
+      "target": "-",
+      "severity": "medium",
+      "evidence": "",
+      "remediation": ""
+    },
+    {
+      "title": "f26",
+      "target": "-",
+      "severity": "medium",
+      "evidence": "",
+      "remediation": ""
+    },
+    {
+      "title": "f27",
+      "target": "-",
+      "severity": "medium",
+      "evidence": "",
+      "remediation": ""
+    },
+    {
+      "title": "f28",
+      "target": "-",
+      "severity": "medium",
+      "evidence": "",
+      "remediation": ""
+    },
+    {
+      "title": "f29",
+      "target": "-",
+      "severity": "medium",
+      "evidence": "",
+      "remediation": ""
+    },
+    {
+      "title": "f30",
+      "target": "-",
+      "severity": "medium",
+      "evidence": "",
+      "remediation": ""
+    },
+    {
+      "title": "f31",
+      "target": "-",
+      "severity": "medium",
+      "evidence": "",
+      "remediation": ""
+    },
+    {
+      "title": "f32",
+      "target": "-",
+      "severity": "medium",
+      "evidence": "",
+      "remediation": ""
+    },
+    {
+      "title": "f33",
+      "target": "-",
+      "severity": "medium",
+      "evidence": "",
+      "remediation": ""
+    },
+    {
+      "title": "f34",
+      "target": "-",
+      "severity": "medium",
+      "evidence": "",
+      "remediation": ""
+    },
+    {
+      "title": "f35",
+      "target": "-",
+      "severity": "medium",
+      "evidence": "",
+      "remediation": ""
+    },
+    {
+      "title": "f36",
+      "target": "-",
+      "severity": "medium",
+      "evidence": "",
+      "remediation": ""
+    },
+    {
+      "title": "f37",
+      "target": "-",
+      "severity": "medium",
+      "evidence": "",
+      "remediation": ""
+    },
+    {
+      "title": "f38",
+      "target": "-",
+      "severity": "medium",
+      "evidence": "",
+      "remediation": ""
+    },
+    {
+      "title": "f39",
+      "target": "-",
+      "severity": "medium",
+      "evidence": "",
+      "remediation": ""
+    },
+    {
+      "title": "f40",
+      "target": "-",
+      "severity": "medium",
+      "evidence": "",
+      "remediation": ""
+    },
+    {
+      "title": "f41",
+      "target": "-",
+      "severity": "medium",
+      "evidence": "",
+      "remediation": ""
+    },
+    {
+      "title": "f42",
+      "target": "-",
+      "severity": "medium",
+      "evidence": "",
+      "remediation": ""
+    },
+    {
+      "title": "f43",
+      "target": "-",
+      "severity": "medium",
+      "evidence": "",
+      "remediation": ""
+    },
+    {
+      "title": "f44",
+      "target": "-",
+      "severity": "medium",
+      "evidence": "",
+      "remediation": ""
+    },
+    {
+      "title": "f45",
+      "target": "-",
+      "severity": "medium",
+      "evidence": "",
+      "remediation": ""
+    },
+    {
+      "title": "f46",
+      "target": "-",
+      "severity": "medium",
+      "evidence": "",
+      "remediation": ""
+    },
+    {
+      "title": "f47",
+      "target": "-",
+      "severity": "medium",
+      "evidence": "",
+      "remediation": ""
+    },
+    {
+      "title": "f48",
+      "target": "-",
+      "severity": "medium",
+      "evidence": "",
+      "remediation": ""
+    },
+    {
+      "title": "f49",
+      "target": "-",
+      "severity": "medium",
+      "evidence": "",
+      "remediation": ""
+    },
+    {
+      "title": "f50",
+      "target": "-",
+      "severity": "medium",
+      "evidence": "",
+      "remediation": ""
+    },
+    {
+      "title": "f51",
+      "target": "-",
+      "severity": "medium",
+      "evidence": "",
+      "remediation": ""
+    },
+    {
+      "title": "f52",
+      "target": "-",
+      "severity": "medium",
+      "evidence": "",
+      "remediation": ""
+    },
+    {
+      "title": "f53",
+      "target": "-",
+      "severity": "medium",
+      "evidence": "",
+      "remediation": ""
+    },
+    {
+      "title": "f54",
+      "target": "-",
+      "severity": "medium",
+      "evidence": "",
+      "remediation": ""
+    },
+    {
+      "title": "f55",
+      "target": "-",
+      "severity": "medium",
+      "evidence": "",
+      "remediation": ""
+    },
+    {
+      "title": "f56",
+      "target": "-",
+      "severity": "medium",
+      "evidence": "",
+      "remediation": ""
+    },
+    {
+      "title": "f57",
+      "target": "-",
+      "severity": "medium",
+      "evidence": "",
+      "remediation": ""
+    },
+    {
+      "title": "f58",
+      "target": "-",
+      "severity": "medium",
+      "evidence": "",
+      "remediation": ""
+    },
+    {
+      "title": "f59",
+      "target": "-",
+      "severity": "medium",
+      "evidence": "",
+      "remediation": ""
+    }
+  ]
+}

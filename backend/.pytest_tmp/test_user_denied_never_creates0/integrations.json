@@ -1,0 +1,17 @@
+{
+  "version": 2,
+  "connections": {},
+  "history": [
+    {
+      "id": "eacf0346cbad2dc5",
+      "at": "2026-11-19T15:37:35.555350+00:00",
+      "timestamp": 1795102655.5553572,
+      "user_id": "u1",
+      "plugin_id": "github",
+      "action": "permission_denied",
+      "status": "error",
+      "detail": "The user rejected the request",
+      "account": null
+    }
+  ]
+}

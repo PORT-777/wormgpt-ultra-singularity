@@ -1,0 +1,28 @@
+{
+  "version": 2,
+  "connections": {},
+  "history": [
+    {
+      "id": "8c7f16c7d50674ec",
+      "at": "2026-11-19T15:37:35.642668+00:00",
+      "timestamp": 1795102655.6426742,
+      "user_id": "u1",
+      "plugin_id": "github",
+      "action": "connect",
+      "status": "ok",
+      "detail": "scopes=repo,read:user,user:email",
+      "account": "octocat"
+    },
+    {
+      "id": "86c0bc60dcb0941c",
+      "at": "2026-11-19T15:37:35.643589+00:00",
+      "timestamp": 1795102655.643595,
+      "user_id": "u1",
+      "plugin_id": "github",
+      "action": "disconnect",
+      "status": "ok",
+      "detail": "Tokens revoked at the provider and deleted locally.",
+      "account": "octocat"
+    }
+  ]
+}

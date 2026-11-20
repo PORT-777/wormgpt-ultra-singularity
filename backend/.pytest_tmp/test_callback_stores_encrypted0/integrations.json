@@ -1,0 +1,40 @@
+{
+  "version": 2,
+  "connections": {
+    "u1::github": {
+      "user_id": "u1",
+      "plugin_id": "github",
+      "provider_group": "github",
+      "token_type": "bearer",
+      "scopes": [
+        "repo",
+        "read:user",
+        "user:email"
+      ],
+      "expires_at": null,
+      "account_id": "42",
+      "account_name": "octocat",
+      "account_email": "octo@example.com",
+      "workspace_name": null,
+      "status": "connected",
+      "last_error": null,
+      "created_at": "2026-11-19T15:37:35.545750+00:00",
+      "updated_at": "2026-11-19T15:37:35.545758+00:00",
+      "last_refreshed_at": null,
+      "secrets": "Z0FBQUFBQnFfeGVfcEFLelZZd3c2ajc0Y19jelZObEN0TmZ4RkpiMGN4Z0k4eWl3NXA1aW43YjRvOHc3dDVVZnJubGxYUFRyeWstM2U4bXBoMjhYWDcwQ3RBOWxTS05mUzJ6QUVQdndjcE9lcERfZUZ1WGlQYUFyQVp6LWZheG9qTVdYdnFQWkxDelV1TlozcWdFRXQtMDVla1BZVkNlY1EzczI4ak1FUlE5clFNMUdLcjh5SzNZPQ=="
+    }
+  },
+  "history": [
+    {
+      "id": "f722e3b8c1472799",
+      "at": "2026-11-19T15:37:35.546301+00:00",
+      "timestamp": 1795102655.5463078,
+      "user_id": "u1",
+      "plugin_id": "github",
+      "action": "connect",
+      "status": "ok",
+      "detail": "scopes=repo,read:user,user:email",
+      "account": "octocat"
+    }
+  ]
+}

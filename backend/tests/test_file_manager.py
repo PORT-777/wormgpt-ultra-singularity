@@ -1,0 +1,115 @@
+﻿"""Unit tests for UniversalFileManager search / extract / hex actions."""
+from __future__ import annotations
+
+import io
+import zipfile
+from pathlib import Path
+
+import pytest
+
+import configs as config
+from tools.file_manager import UniversalFileManager
+
+
+@pytest.fixture()
+def manager(tmp_path, monkeypatch):
+    monkeypatch.setattr(config, "WORKSPACE_DIR", tmp_path)
+    return UniversalFileManager()
+
+
+# --------------------------------------------------------------------- #
+#  search
+# --------------------------------------------------------------------- #
+def test_search_finds_pattern_with_line_number(manager, tmp_path):
+    (tmp_path / "main.cpp").write_text(
+        "int main() {\n    return FRAME_MAGIC;\n}\n", encoding="utf-8")
+    out = asyncio_run(manager.run(action="search", pattern="FRAME_MAGIC"))
+    assert "main.cpp:2" in out
+
+
+def test_search_respects_glob_and_junk_dirs(manager, tmp_path):
+    junk = tmp_path / "node_modules"
+    junk.mkdir()
+    (junk / "match.js").write_text("const TARGET = 1;\n", encoding="utf-8")
+    keep = tmp_path / "app.js"
+    keep.write_text("const TARGET = 2;\n", encoding="utf-8")
+    out = asyncio_run(manager.run(action="search", pattern="TARGET",
+                                  glob="*.js"))
+    assert "app.js:1" in out
+    assert "node_modules" not in out
+
+
+def _arun(coro):
+    import asyncio
+    return asyncio.run(coro)
+
+
+# keep a tiny alias so both helper styles work
+asyncio_run = _arun
+
+
+# --------------------------------------------------------------------- #
+#  extract (zip + zip-slip guard)
+# --------------------------------------------------------------------- #
+def _make_zip(path: Path, entries: dict) -> None:
+    with zipfile.ZipFile(path, "w") as zf:
+        for name, content in entries.items():
+            zf.writestr(name, content)
+
+
+def test_extract_zip_ok(manager, tmp_path):
+    _make_zip(tmp_path / "proj.zip", {
+        "src/a.cpp": "int a() { return 1; }",
+        "src/b.h": "int b();",
+    })
+    out = _arun(manager.run(action="extract", path="proj.zip"))
+    assert "extracted 2 entries" in out
+    extracted = tmp_path / "extracted" / "proj" / "src" / "a.cpp"
+    assert extracted.exists()
+
+
+def test_extract_blocks_zip_slip(manager, tmp_path):
+    # crafted archive containing a traversal member name
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w") as zf:
+        zf.writestr("../evil.txt", "payload")
+    arc = tmp_path / "evil.zip"
+    arc.write_bytes(buf.getvalue())
+    out = _arun(manager.run(action="extract", path="evil.zip"))
+    assert "blocked unsafe archive entry" in out
+    assert not (tmp_path / "evil.txt").exists()
+
+
+def test_extract_rejects_rar(manager, tmp_path):
+    (tmp_path / "x.rar").write_bytes(b"rar!")
+    out = _arun(manager.run(action="extract", path="x.rar"))
+    assert "not a supported archive" in out
+
+
+# --------------------------------------------------------------------- #
+#  hex
+# --------------------------------------------------------------------- #
+def test_hex_renders_slice_with_ascii(manager, tmp_path):
+    marker = "🔥😈 PORT 777 EVIL ☠️🔥👹-ultra!!"
+    data = bytes(range(0, 64)) + marker.encode("utf-8")
+    (tmp_path / "dump.bin").write_bytes(data)
+    # one 16-byte row: the emoji are non-ASCII so the ASCII column shows dots
+    out = _arun(manager.run(action="hex", path="dump.bin",
+                            offset=0x40, length=16))
+    assert "0x00000040" in out
+    assert "F0 9F 94 A5" in out          # 🔥 as raw bytes
+    assert "PORT 77" in out              # printable part of the ascii column
+
+    # full marker needs enough bytes to be rendered in one go
+    n = len(marker.encode("utf-8"))
+    out2 = _arun(manager.run(action="hex", path="dump.bin",
+                             offset=0x40, length=n + 8))
+    assert "0x00000040" in out2
+    assert "ultra!!" in out2               # ascii column tail, fully printable
+
+
+def test_hex_respects_file_size(manager, tmp_path):
+    (tmp_path / "tiny.bin").write_bytes(b"\x00\x01\x02")
+    out = _arun(manager.run(action="hex", path="tiny.bin",
+                            offset=1000, length=16))
+    assert "empty range" in out
