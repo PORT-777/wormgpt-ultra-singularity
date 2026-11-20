@@ -195,7 +195,7 @@
   transition: opacity var(--dur) var(--ease);
 }
 .composer2:focus-within::before { opacity: 1; animation: p7-aurora 4s linear infinite; }
-.composer2:focus-within { transform: translateY(-1px); box-shadow: 0 10px 34px rgba(0,0,0,.42); }
+.composer2:focus-within { box-shadow: 0 10px 34px rgba(0,0,0,.42); }
 .composer2 textarea { caret-color: var(--accent-hover); }
 
 /* Tool icons */

@@ -1,5 +1,6 @@
 // @ts-nocheck
 import React, { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import Icon from "./Icon.jsx";
 import { useAnchoredPanel } from "../ui/useAnchoredPanel.js";
 
@@ -21,12 +22,13 @@ export default function ModePicker({ value="code", onChange }){
   const [open,setOpen]=useState(false);
   const [active,setActive]=useState(0);
   const rootRef=useRef(null);
+  const menuRef=useRef(null);
   const listRef=useRef(null);
   const menuPos = useAnchoredPanel(open, rootRef, { width: 340 });
   const cur = MODES.find(m=>m.id===value) || MODES[0];
 
   useEffect(()=>{ if(!open) return; const i=Math.max(0, MODES.findIndex(m=>m.id===value)); setActive(i);
-    const onDoc=(e)=>{ if(!rootRef.current?.contains(e.target)) setOpen(false); };
+    const onDoc=(e)=>{ if(!rootRef.current?.contains(e.target) && !menuRef.current?.contains(e.target)) setOpen(false); };
     document.addEventListener("mousedown", onDoc); return ()=>document.removeEventListener("mousedown", onDoc);
   },[open,value]);
 
@@ -52,18 +54,21 @@ export default function ModePicker({ value="code", onChange }){
         <span>{cur.label}</span>
         <span className="modepick-chev" aria-hidden="true">▾</span>
       </button>
-      {open && (
-        <div className="modepick-menu" role="listbox" aria-label="Mode" ref={listRef} style={menuPos}>
-          {MODES.map((m,idx)=>(
-            <button key={m.id} type="button" data-idx={idx} role="option" aria-selected={m.id===value}
-              className={`modepick-item ${m.id===value?"selected":""} ${idx===active?"active":""}`}
-              onMouseEnter={()=>setActive(idx)} onClick={()=>choose(m.id)}>
-              <span className="modepick-ic lg" style={{color:m.color}}><Icon name={m.icon} size={15}/></span>
-              <span className="modepick-main"><span className="modepick-label">{m.label}</span><span className="modepick-desc">{m.desc}</span></span>
-              <span className="modepick-check" aria-hidden="true">{m.id===value?"✓":""}</span>
-            </button>
-          ))}
-        </div>
+      {open && createPortal(
+        <div className="modepick-menu modepick-portal" role="listbox" aria-label="Mode" ref={menuRef} style={{...menuPos, zIndex: 300}}>
+          <div ref={listRef}>
+            {MODES.map((m,idx)=>(
+              <button key={m.id} type="button" data-idx={idx} role="option" aria-selected={m.id===value}
+                className={`modepick-item ${m.id===value?"selected":""} ${idx===active?"active":""}`}
+                onMouseEnter={()=>setActive(idx)} onClick={()=>choose(m.id)}>
+                <span className="modepick-ic lg" style={{color:m.color}}><Icon name={m.icon} size={15}/></span>
+                <span className="modepick-main"><span className="modepick-label">{m.label}</span><span className="modepick-desc">{m.desc}</span></span>
+                <span className="modepick-check" aria-hidden="true">{m.id===value?"✓":""}</span>
+              </button>
+            ))}
+          </div>
+        </div>,
+        document.body
       )}
     </div>
   );
