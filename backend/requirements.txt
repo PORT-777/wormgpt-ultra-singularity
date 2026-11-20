@@ -1,0 +1,41 @@
+﻿# --- 🔥😈 PORT 777 EVIL ☠️🔥👹 :: Backend Dependencies ---
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+python-dotenv>=1.0.1
+pydantic>=2.7.0
+httpx>=0.27.0
+
+# --- Voice (optional but recommended) ---
+faster-whisper>=1.0.0          # local speech-to-text
+pyttsx3==2.90                  # offline text-to-speech (Windows SAPI)
+
+# --- AI Orchestration ---
+langchain-core>=0.3.0
+langchain-groq>=0.2.0          # Groq (Llama-3) fast executor brain
+langchain-google-genai>=2.0.0  # Gemini manager + long context + vision
+huggingface_hub>=0.26.0        # HF Inference API (specialist fallback)
+
+# --- Long-term memory (RAG) ---
+chromadb>=0.5.0                # persistent vector database
+
+# --- Tools ---
+ddgs>=9.0.0                    # DuckDuckGo web search
+playwright>=1.45.0             # browser automation -> run: playwright install chromium
+pyautogui>=0.9.54              # desktop control (screenshots, typing, media keys)
+pyyaml>=6.0.1                  # YAML skill packs (additive self-extension)
+
+# --- CyberOps toolkit: optional extras (stdlib-first, all optional) ---
+# The CyberOps package (backend/security_ops) runs fully offline with the
+# standard library. Install any of the packages below for deeper parsing or
+# higher accuracy; every module degrades gracefully when they are absent.
+# pefile>=2023.2.7        # richer PE headers/imports/resources (manual parser is the fallback)
+# cryptography>=42.0      # X.509/PEM certificate parsing (limited fallback built in)
+# Pillow>=10.0            # image steganography (LSB extraction works without it)
+# capstone>=5.0           # disassembly for shellcode/ROP (pattern scan fallback)
+# yara-python>=4.5        # native YARA engine (builtin matcher is the fallback)
+# scapy>=2.5              # packet crafting (PCAP parsing is pure Python)
+# dpkt>=1.9               # alternate PCAP/PCAPNG parsing
+# pyelftools>=0.31        # ELF symbol/section detail (manual parser is the fallback)
+# oletools>=0.60          # Office/OLE macro analysis
+# volatility3>=2.5        # memory-image analysis
+# PyJWT>=2.8              # full JWT signature verification (claims decoder built in)
