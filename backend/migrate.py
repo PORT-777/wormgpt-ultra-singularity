@@ -30,7 +30,7 @@ def _connect():
     except ImportError as exc:
         raise SystemExit("psycopg2-binary is required: pip install psycopg2-binary") from exc
     return psycopg2.connect(
-        database.DATABASE_URL,
+        database._dsn(),
         sslmode=os.getenv("PGSSLMODE", "require"),
         connect_timeout=int(os.getenv("PGCONNECT_TIMEOUT", "15")),
         application_name="port777-migrate",

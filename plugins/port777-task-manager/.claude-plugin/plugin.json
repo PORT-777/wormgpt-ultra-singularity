@@ -1,0 +1,8 @@
+{
+  "name": "port777-task-manager",
+  "displayName": "Port777 Task Manager",
+  "version": "1.0.0",
+  "description": "انشئ المهام وتابعها وأنجزها مباشرة من المحادثة عبر منصة port777 ai.",
+  "author": { "name": "Port777", "url": "https://port777.ai" },
+  "license": "MIT"
+}

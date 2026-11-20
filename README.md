@@ -28,6 +28,12 @@ multiplayer games, anti-cheat evasion, or DRM/licensing circumvention.
 
 ---
 
+## Claude-compatible plugins
+
+Two publishable plugin bundles with MCP connectors, skills, commands and UI
+metadata live under `plugins/`. See [`docs/PLUGINS.md`](docs/PLUGINS.md) for
+the layout, local MCP server, validation and publishing checklist.
+
 ## Vendor hub (repos → tools / plugins / MCP / skills)
 
 All vendored repositories are indexed by `backend/vendor_hub.py` and exposed

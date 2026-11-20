@@ -1,0 +1,16 @@
+{
+  "name": "port777-plugins",
+  "description": "Internal plugin directory for PORT 777 AI. Add this repository URL in claude.ai → Customize → Plugins → Add → Add marketplace.",
+  "plugins": [
+    {
+      "name": "port777-ai",
+      "repository": "https://github.com/port777/port777-ai",
+      "path": "plugins/port777-ai"
+    },
+    {
+      "name": "port777-task-manager",
+      "repository": "https://github.com/port777/port777-ai",
+      "path": "plugins/port777-task-manager"
+    }
+  ]
+}

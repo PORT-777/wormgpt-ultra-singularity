@@ -32,6 +32,7 @@ try:
 except Exception:  # dotenv is optional; env vars can be supplied by the shell
     pass
 
+import database  # noqa: E402
 from backend.api.chat import router as chat_router  # noqa: E402
 from backend.saas.api import router as saas_router  # noqa: E402
 from backend.api.computer import router as computer_router  # noqa: E402
@@ -39,6 +40,7 @@ from backend.api.plugins import router as plugins_router  # noqa: E402
 from backend.connect import router as connect_router  # noqa: E402
 from backend.api.intelligence import router as intelligence_router  # noqa: E402
 from backend.api.system import router as system_router  # noqa: E402
+from backend.api.tasks import router as tasks_router  # noqa: E402
 from backend.api.vendor import router as vendor_router  # noqa: E402
 from backend.api.workspace import router as workspace_router  # noqa: E402
 from backend.plugins.deps import get_store  # noqa: E402
@@ -133,6 +135,18 @@ _default_origins = [
 _configured_origins = [
     origin.strip() for origin in _os.getenv("CORS_ORIGINS", "").split(",") if origin.strip()
 ]
+@app.middleware("http")
+async def _release_db_connection(request: Request, call_next):
+    """Return this thread's pooled DB connection after every request."""
+    try:
+        return await call_next(request)
+    finally:
+        try:
+            database.release()
+        except Exception:
+            pass
+
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_configured_origins or _default_origins,
@@ -164,6 +178,7 @@ def mount_router(target: FastAPI, router, prefix: str = "") -> None:
 
 
 # --- API routers -------------------------------------------------------
+mount_router(app, tasks_router)  # /api/tasks/*
 mount_router(app, saas_router)  # /api/saas/*
 mount_router(app, computer_router)  # /api/computer/*
 mount_router(app, intelligence_router)  # /api/intelligence/*

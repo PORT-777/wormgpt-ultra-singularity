@@ -172,7 +172,9 @@ class ComputerManager:
     def resources(self, computer_id: str, user_id: Optional[str]) -> Dict[str, Any]:
         row, p = self._with_provider(computer_id, user_id)
         raw = p.resources(computer_id, row["provider_ref"])
-        conn = getattr(store, "_conn")()
+        import database
+
+        conn = database.conn()
         conn.execute("INSERT INTO resource_metrics(computer_id,user_id,raw,ts) VALUES(?,?,?,?)",
                      (computer_id, row["user_id"], json.dumps(raw, default=str), time.time()))
         conn.commit()

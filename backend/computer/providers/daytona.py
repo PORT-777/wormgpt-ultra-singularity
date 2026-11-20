@@ -23,6 +23,8 @@ _BASE_PACKAGES = [
     "build-essential gcc g++ make cmake openssl sqlite3 postgresql-client "
     "default-jre-headless default-jdk-headless ca-certificates > /dev/null",
     "python3 -m pip install --quiet --break-system-packages playwright",
+    "python3 -m playwright install chromium",
+    "python3 -m playwright install-deps chromium",
     "mkdir -p /home/daytona/.wormgpt /home/daytona/workspace",
 ]
 

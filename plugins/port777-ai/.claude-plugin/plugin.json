@@ -1,0 +1,8 @@
+{
+  "name": "port777-ai",
+  "displayName": "Port777 AI Platform",
+  "version": "1.0.0",
+  "description": "استخدم منصة port777 الحقيقية: فحص الحالة، النماذج، مكتبة المهارات، وحواسيب لينكس المعزولة من داخل المحادثة.",
+  "author": { "name": "Port777", "url": "https://port777.ai" },
+  "license": "MIT"
+}

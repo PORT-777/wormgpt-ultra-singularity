@@ -28,6 +28,7 @@ import re
 import sqlite3
 import threading
 from contextlib import contextmanager
+from urllib.parse import urlsplit, urlunsplit
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
 
@@ -356,6 +357,14 @@ def _sqlite_conn() -> sqlite3.Connection:
         return _SQLITE_CONN
 
 
+def _dsn(url: str = "") -> str:
+    """Strip ORM-only query params (e.g. ?pgbouncer=true) psycopg2 rejects."""
+    parts = urlsplit(url or DATABASE_URL)
+    if not parts.query:
+        return url or DATABASE_URL
+    return urlunsplit(parts._replace(query=""))
+
+
 def _init_pool() -> Any:
     global _pool
     if _pool is None:
@@ -368,7 +377,7 @@ def _init_pool() -> Any:
             "application_name": "port777-ai",
         }
         _pool = ThreadedConnectionPool(
-            1, int(os.getenv("PGPOOL_MAX", "10")), DATABASE_URL, **options
+            1, int(os.getenv("PGPOOL_MAX", "40")), _dsn(), **options
         )
     return _pool
 

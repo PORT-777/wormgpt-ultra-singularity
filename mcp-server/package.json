@@ -1,0 +1,14 @@
+{
+  "name": "port777-mcp-server",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Stateless Streamable HTTP MCP server for PORT 777 AI plugins.",
+  "scripts": {
+    "start": "node server.mjs",
+    "check": "node server.mjs --check"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.1",
+    "zod": "^4.6.5"
+  }
+}

@@ -73,7 +73,7 @@ def _pg():
     import psycopg2
 
     return psycopg2.connect(
-        database.DATABASE_URL,
+        database._dsn(),
         sslmode="require", connect_timeout=15, application_name="port777-migrate-data",
     )
 
