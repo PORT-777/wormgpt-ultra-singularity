@@ -33,6 +33,7 @@ except Exception:  # dotenv is optional; env vars can be supplied by the shell
     pass
 
 from backend.api.chat import router as chat_router  # noqa: E402
+from backend.saas.api import router as saas_router  # noqa: E402
 from backend.api.computer import router as computer_router  # noqa: E402
 from backend.api.plugins import router as plugins_router  # noqa: E402
 from backend.connect import router as connect_router  # noqa: E402
@@ -62,6 +63,24 @@ async def lifespan(app: FastAPI):
     except Exception as exc:
         logger.warning("encrypted secret store unavailable: %s", exc)
     try:
+        import database
+        import storage_backends
+
+        database.ensure_schema()
+        storage_backends.ensure_buckets()
+        logger.info("persistence backend: %s / storage: %s",
+                    database.backend_name(), storage_backends.backend().name)
+    except Exception as exc:
+        logger.warning("persistence init failed: %s", exc)
+    try:
+        from saas import db as saas_db
+        from saas import plans as saas_plans
+
+        saas_db.init()
+        saas_plans.seed()
+    except Exception as exc:
+        logger.warning("SaaS subsystem init failed: %s", exc)
+    try:
         from computer import store as computer_store
         from computer.manager import get_manager
 
@@ -80,6 +99,12 @@ async def lifespan(app: FastAPI):
     logger.info("registry ready — %d plugins loaded", len(registry_instance._plugins))
     yield
     logger.info("shutting down")
+    try:
+        import database
+
+        database.release()
+    except Exception:
+        pass
     store = get_store()
     logger.info("audit entries written: %d", store.snapshot()["usage_log_size"])
 
@@ -91,13 +116,19 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+import os as _os
+
+_default_origins = [
+    "http://localhost:3000", "http://127.0.0.1:3000",
+    "http://localhost:5173", "http://127.0.0.1:5173",
+    "http://localhost:7777", "http://127.0.0.1:7777",
+]
+_configured_origins = [
+    origin.strip() for origin in _os.getenv("CORS_ORIGINS", "").split(",") if origin.strip()
+]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000", "http://127.0.0.1:3000",
-        "http://localhost:5173", "http://127.0.0.1:5173",
-        "http://localhost:7777", "http://127.0.0.1:7777",
-    ],
+    allow_origins=_configured_origins or _default_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -126,6 +157,7 @@ def mount_router(target: FastAPI, router, prefix: str = "") -> None:
 
 
 # --- API routers -------------------------------------------------------
+mount_router(app, saas_router)  # /api/saas/*
 mount_router(app, computer_router)  # /api/computer/*
 mount_router(app, intelligence_router)  # /api/intelligence/*
 mount_router(app, system_router)  # /api/status, /api/history, /api/runtime, ...
@@ -258,10 +290,29 @@ for module_name in ("gateway", "api.main"):
 
 @app.get("/api/health")
 async def health():
+    import database
+    import storage_backends
+
+    db_status = database.health()
     return {
-        "status": "healthy",
+        "status": "healthy" if db_status["ok"] else "degraded",
         "plugins_loaded": len(registry_instance._plugins),
+        "database": db_status,
+        "storage": storage_backends.storage_status(),
     }
+
+
+@app.get("/health")
+async def render_health():
+    """Render health check: 200 only when the external database is reachable."""
+    import database
+    from fastapi.responses import JSONResponse
+
+    status = database.health()
+    return JSONResponse(
+        status_code=200 if status["ok"] else 503,
+        content={"status": "ok" if status["ok"] else "unavailable", "database": status},
+    )
 
 
 @app.exception_handler(Exception)

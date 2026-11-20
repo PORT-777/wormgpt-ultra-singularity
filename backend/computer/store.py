@@ -1,6 +1,6 @@
 """Persistence for the AI Computer subsystem.
 
-Uses the application's existing SQLite database through storage._conn().
+Uses the application's existing SQLite database through database.conn().
 Large logs and binary artifacts live on disk; DB stores paths and metadata.
 """
 from __future__ import annotations
@@ -10,9 +10,9 @@ import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-import storage
+import database
 
-ARTIFACT_DIR = Path(storage.__file__).resolve().parent / "data" / "computer_artifacts"
+ARTIFACT_DIR = Path(__file__).resolve().parent.parent / "data" / "computer_artifacts"
 ARTIFACT_DIR.mkdir(parents=True, exist_ok=True)
 
 SCHEMA = """
@@ -121,7 +121,7 @@ CREATE INDEX IF NOT EXISTS idx_logs_job ON execution_logs(job_id);
 
 
 def init_tables() -> None:
-    conn = storage._conn()
+    conn = database.conn()
     conn.executescript(SCHEMA)
     conn.commit()
 
@@ -140,7 +140,7 @@ def _un(value: Any, fallback=None):
 
 
 def save_computer(row: Dict[str, Any]) -> None:
-    conn = storage._conn()
+    conn = database.conn()
     conn.execute(
         "INSERT OR REPLACE INTO computers(id,user_id,name,mode,provider,provider_ref,status,os,resources,metadata,created,updated) "
         "VALUES(?,?,?,?,?,?,?,?,?,?,?,?)",
@@ -152,7 +152,7 @@ def save_computer(row: Dict[str, Any]) -> None:
 
 
 def get_computer(computer_id: str, user_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
-    conn = storage._conn()
+    conn = database.conn()
     if user_id:
         row = conn.execute("SELECT * FROM computers WHERE id=? AND user_id=?", (computer_id, user_id)).fetchone()
     else:
@@ -166,7 +166,7 @@ def get_computer(computer_id: str, user_id: Optional[str] = None) -> Optional[Di
 
 
 def list_computers(user_id: Optional[str] = None, limit: int = 100) -> List[Dict[str, Any]]:
-    conn = storage._conn()
+    conn = database.conn()
     if user_id:
         rows = conn.execute("SELECT * FROM computers WHERE user_id=? ORDER BY updated DESC LIMIT ?", (user_id, limit)).fetchall()
     else:
@@ -179,7 +179,7 @@ def list_computers(user_id: Optional[str] = None, limit: int = 100) -> List[Dict
 
 
 def delete_computer(computer_id: str, user_id: Optional[str] = None) -> bool:
-    conn = storage._conn()
+    conn = database.conn()
     cur = conn.execute("DELETE FROM computers WHERE id=? AND user_id=?" if user_id
                        else "DELETE FROM computers WHERE id=?",
                        (computer_id, user_id) if user_id else (computer_id,))
@@ -188,21 +188,21 @@ def delete_computer(computer_id: str, user_id: Optional[str] = None) -> bool:
 
 
 def add_log(job_id: str, computer_id: str, user_id: str, level: str, message: str) -> None:
-    conn = storage._conn()
+    conn = database.conn()
     conn.execute("INSERT INTO execution_logs(job_id,computer_id,user_id,level,message,ts) VALUES(?,?,?,?,?,?)",
                  (job_id, computer_id, user_id, level, str(message)[:20000], time.time()))
     conn.commit()
 
 
 def logs(job_id: str, limit: int = 300) -> List[Dict[str, Any]]:
-    conn = storage._conn()
+    conn = database.conn()
     rows = conn.execute("SELECT level,message,ts FROM execution_logs WHERE job_id=? ORDER BY id DESC LIMIT ?",
                         (job_id, limit)).fetchall()
     return [dict(r) for r in reversed(rows)]
 
 
 def save_job(row: Dict[str, Any]) -> None:
-    conn = storage._conn()
+    conn = database.conn()
     conn.execute(
         "INSERT OR REPLACE INTO execution_jobs(id,computer_id,user_id,session_id,status,steps,result_path,error,created,updated) "
         "VALUES(?,?,?,?,?,?,?,?,?,?)",
@@ -214,7 +214,7 @@ def save_job(row: Dict[str, Any]) -> None:
 
 
 def get_job(job_id: str, user_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
-    conn = storage._conn()
+    conn = database.conn()
     row = conn.execute("SELECT * FROM execution_jobs WHERE id=?" + (" AND user_id=?" if user_id else ""),
                        (job_id, user_id) if user_id else (job_id,)).fetchone()
     if not row:

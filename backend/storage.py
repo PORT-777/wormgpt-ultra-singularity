@@ -12,12 +12,12 @@ heavy paths would use asyncio.to_thread.
 from __future__ import annotations
 
 import json
-import sqlite3
 import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import configs as config
+import database
 
 DB_DIR = config.BACKEND_DIR / "data"
 DB_DIR.mkdir(parents=True, exist_ok=True)
@@ -26,20 +26,9 @@ _legacy = DB_DIR / "🔥😈 PORT 777 EVIL ☠️🔥👹.db"
 DB_PATH = _legacy if _legacy.exists() else (DB_DIR / "agent.db")
 AUDIT_JSONL = DB_DIR / "audit.jsonl"
 
-_CONN: Optional[sqlite3.Connection] = None
-
-
-def _conn() -> sqlite3.Connection:
-    global _CONN
-    if _CONN is None:
-        _CONN = sqlite3.connect(str(DB_PATH), check_same_thread=False)
-        _CONN.row_factory = sqlite3.Row
-        # concurrency: WAL allows readers during a write; busy_timeout
-        # makes a blocked writer wait politely instead of raising.
-        _CONN.execute("PRAGMA journal_mode=WAL")
-        _CONN.execute("PRAGMA busy_timeout=5000")
-        _CONN.execute("PRAGMA synchronous=NORMAL")
-    return _CONN
+def _conn():
+    """Connection from the unified layer (SQLite locally, Supabase PG in prod)."""
+    return database.conn()
 
 
 def init() -> None:

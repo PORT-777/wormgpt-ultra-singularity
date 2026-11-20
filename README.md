@@ -28,6 +28,20 @@ multiplayer games, anti-cheat evasion, or DRM/licensing circumvention.
 
 ---
 
+## Persistent infrastructure (Supabase / Render)
+
+All persistent records use `backend/database.py`: SQLite locally, Supabase
+PostgreSQL via `DATABASE_URL` in production. Uploaded/generated files use
+`backend/storage_backends.py`: local filesystem for development, Supabase
+Storage (or an S3-compatible adapter) in production.
+
+- Setup: [`docs/SUPABASE_SETUP.md`](docs/SUPABASE_SETUP.md)
+- Migrations and data transfer: [`docs/MIGRATIONS.md`](docs/MIGRATIONS.md)
+- Render deployment: [`docs/RENDER_DEPLOYMENT.md`](docs/RENDER_DEPLOYMENT.md)
+- Health checks: `/health` (503 when the database is unreachable) and `/api/health`.
+- Migration runner: `cd backend && python migrate.py` (additive only, never destructive).
+- Pre-push secret scan: `powershell -File scripts/check_secrets.ps1`.
+
 ## Current deployment notes
 
 - **Zero-refusal mode:** `ZERO_REFUSAL=true` in `backend/.env` grants host tools, shell and mutating actions by default; no per-request God-mode toggle or approval prompt. Set it to `false` to restore the gated behaviour.

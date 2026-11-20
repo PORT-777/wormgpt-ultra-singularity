@@ -32,3 +32,19 @@ src-tauri/target/
 *.appimage
 # local models
 backend/models/*.gguf
+
+# environment variants (example files stay tracked)
+.env.*
+!.env.example
+backend/.env.*
+!backend/.env.example
+
+# database backups and migration artifacts (may contain user records)
+backend/backups/
+*.db-journal
+*.db-wal
+*.db-shm
+backend/migrations/*.bak
+
+# local object storage (user files never enter git)
+backend/data/storage/
