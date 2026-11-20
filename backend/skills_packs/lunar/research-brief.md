@@ -1,10 +1,10 @@
 ---
-name: research-brief
+name: lunar-research-brief
 description: >
   Create an automation that writes a recurring research brief. Uses Tavily
   MCP for web research and Notion MCP to publish the final brief with
   executive summary, implications, and source citations.
-trigger_when: [research-brief, research, brief]
+trigger_when: [lunar-research-brief, research-brief]
 ---
 Set up a recurring automation that researches a topic and publishes a brief
 to Notion.

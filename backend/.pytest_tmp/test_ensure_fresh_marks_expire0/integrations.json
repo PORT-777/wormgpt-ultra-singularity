@@ -11,24 +11,24 @@
         "read:user",
         "user:email"
       ],
-      "expires_at": 1795175207.5028236,
+      "expires_at": 1795182698.039212,
       "account_id": "42",
       "account_name": "octocat",
       "account_email": "octo@example.com",
       "workspace_name": null,
       "status": "expired",
       "last_error": "Access token expired; reconnect required.",
-      "created_at": "2026-11-20T11:46:57.501527+00:00",
-      "updated_at": "2026-11-20T11:46:57.502835+00:00",
+      "created_at": "2026-11-20T13:51:48.037934+00:00",
+      "updated_at": "2026-11-20T13:51:48.039223+00:00",
       "last_refreshed_at": null,
-      "secrets": "Z0FBQUFBQnJBRE14UmFzWlhPdEI2dDhmTmpvcHNyelhsRXYzSWgwWDZPelFxTUhQSlF0VWUyMzVPQkJJRGVpelFHZG9XcE03cXFjSF9SU2M1Mk1CSWdUTWNPZUZjZ3JMZE5tX3VxQWVuc29aVUxPUmc2MDQyRlMzbU9IMlFfQ2pNZzNQb2pBUHdEbVVPTnZrSkV6QVd3cUdyVkdoNl9uQUZtcHBKOF9UUHgtdkFWeWlwYk5haUY4PQ=="
+      "secrets": "Z0FBQUFBQnJBRkIwWUUxeFI4MWxZcmlNV1gzUnFpcXl6ZHhPbVd3cFhaYnAxLVpLWFFkYjBmMHpISkpteXVlZHFaNXpJYmc1ekxyN29tenhCeUZCYkVLSG1OMWwzbHBfRFlUeV9VYVlDUjd5VHJZTGtzYzM2SU93Q0VOU0pDX2RFREJNSkIwLXF5QVJMbms0NldnOGU2bjh2dm0wMUJucnRsX0syTVB0MENnWWhQRVl0eS1OODBFPQ=="
     }
   },
   "history": [
     {
-      "id": "0fcf078e58b3026f",
-      "at": "2026-11-20T11:46:57.502101+00:00",
-      "timestamp": 1795175217.502107,
+      "id": "7f3464db708c4c54",
+      "at": "2026-11-20T13:51:48.038496+00:00",
+      "timestamp": 1795182708.0385022,
       "user_id": "u1",
       "plugin_id": "github",
       "action": "connect",
@@ -37,9 +37,9 @@
       "account": "octocat"
     },
     {
-      "id": "ceea307e636cba5c",
-      "at": "2026-11-20T11:46:57.503299+00:00",
-      "timestamp": 1795175217.503306,
+      "id": "ce0ce20df024a426",
+      "at": "2026-11-20T13:51:48.039677+00:00",
+      "timestamp": 1795182708.039683,
       "user_id": "u1",
       "plugin_id": "github",
       "action": "expired",

@@ -91,7 +91,7 @@ export default function App(){
   const [authRequired,setAuthRequired]=useState(false);
   const [authToken,setAuthToken]=useState(()=>localStorage.getItem("🔥😈 PORT 777 EVIL ☠️🔥👹_token"));
   const [projectPath,setProjectPath]=useState(()=>localStorage.getItem("port777_project")||"");
-  const [projectInput,setProjectInput]=useState("");
+  const [projectInput,setProjectInput]=useState(()=>localStorage.getItem("port777_project")||"");
   const [projectWorkspaces,setProjectWorkspaces]=useState([]);
   const authHeaders=useCallback((json=true)=>{ const h={}; if(json) h["Content-Type"]="application/json"; if(authToken) h.Authorization=`Bearer ${authToken}`; return h; },[authToken]);
   const [voiceReplies,setVoiceReplies]=useState(()=>!!initPrefs.voiceReplies);
@@ -797,31 +797,7 @@ export default function App(){
             </span>
           </div>
           <div className="top-spacer" />
-          <div className="top-actions">
-            <span className={`conn-dot ${connection.state === "connected" ? (running ? "run" : "ok") : (connection.state === "reconnecting" || connection.state === "checking") ? "run" : "err"}`} title={connection.detail || connection.state} />
-            {runtimeInfo && (
-              <button
-                type="button"
-                className="mini-btn"
-                style={{ maxWidth: 260 }}
-                title={runtimeInfo.workspace || runtimeInfo.name}
-                onClick={() => openAdvanced("exec")}
-              >
-                <Icon name="terminal" size={12} />
-                <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                  {runtimeInfo.name}{runtimeInfo.version ? ` ${String(runtimeInfo.version).split(".").slice(0,2).join(".")}` : ""}
-                  {execTask?.id ? ` · ${execTask.env_label || execTask.env}` : ""}
-                </span>
-              </button>
-            )}
-            <XPBar onOpen={() => openAdvanced("progress")} />
-            <ModelMenu value={chatModel} onChange={setChatModel} onToast={notify} compact />
-            <ReasoningDashboard level={reasoningLevel} confidence={confidenceScore} notes={critiqueNotes} />
-            <button type="button" className={`icon-btn ${ctxOpen ? "on" : ""}`} title="Details panel" onClick={() => setCtxOpen(v => !v)}><Icon name="panelRight" size={16} /></button>
-            <button type="button" className={`icon-btn ${sideTab === "workspace" ? "on" : ""}`} title="Workspace" onClick={() => setSideTab(sideTab === "workspace" ? "sessions" : "workspace")}><Icon name="folder" size={16} /></button>
-            <button type="button" className="icon-btn" title={t("الإضافات والتكاملات", "Plugins & integrations")} aria-label="Plugins" onClick={() => openAdvanced("plugins")}><Icon name="plug" size={16} /></button>
-            <button type="button" className="icon-btn" title="Advanced tools" onClick={() => openAdvanced("models")}><Icon name="more" size={16} /></button>
-          </div>
+          <div className="top-actions"><span className={`conn-dot ${connection.state === "connected" ? (running ? "run" : "ok") : "err"}`} title={connection.detail || connection.state} /></div>
         </header>
 
         <div className="chat-scroll">
@@ -905,12 +881,16 @@ export default function App(){
         <div style={{ maxWidth: "var(--composer-max)", margin: "0 auto 6px", width: "100%", padding: "0 24px", display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
           <Icon name="folder" size={13} />
           <span style={{ fontSize: 11, color: "var(--muted)" }}>{t("المشروع النشط", "Active project")}</span>
-          <select className="input" style={{ maxWidth: 260 }} value={projectPath} onChange={(e) => { setProjectPath(e.target.value); localStorage.setItem("port777_project", e.target.value); }}>
+          <select className="input" style={{ maxWidth: 260 }} value={projectPath} onChange={(e) => { const v = e.target.value; setProjectPath(v); setProjectInput(v); if (v) localStorage.setItem("port777_project", v); else localStorage.removeItem("port777_project"); }}>
             <option value="">{t("بدون مشروع", "No project")}</option>
+            {projectPath && !projectWorkspaces.some((w) => w.path === projectPath) && (
+              <option value={projectPath}>{projectPath}</option>
+            )}
             {projectWorkspaces.map((w) => <option key={w.workspace_id} value={w.path}>{w.workspace_id} · {w.path}</option>)}
           </select>
           <input className="input" style={{ flex: 1, minWidth: 160 }} placeholder="D:/path/to/project" value={projectInput} onChange={(e) => setProjectInput(e.target.value)} />
-          <button type="button" className="btn sm ghost" onClick={() => { const v = projectInput.trim(); if (v) { setProjectPath(v); localStorage.setItem("port777_project", v); } }}>{t("اختيار", "Select")}</button>
+          <button type="button" className="btn sm ghost" onClick={() => { const v = projectInput.trim(); setProjectPath(v); setProjectInput(v); if (v) localStorage.setItem("port777_project", v); else localStorage.removeItem("port777_project"); }}>{t("اختيار", "Select")}</button>
+          {projectPath && <button type="button" className="btn sm ghost" onClick={() => { setProjectPath(""); setProjectInput(""); localStorage.removeItem("port777_project"); }}>{t("إزالة", "Clear")}</button>}
         </div>
 
         {connection.state !== "connected" && (
@@ -957,53 +937,8 @@ export default function App(){
         />
       </main>
 
-      <ContextPanel
-        open={ctxOpen}
-        onClose={() => setCtxOpen(false)}
-        tab={ctxTab}
-        setTab={setCtxTab}
-        planSteps={planSteps}
-        trace={trace}
-        toolLogs={toolLogs}
-        messages={messages}
-        sessionId={sessionId}
-        attachments={attachments}
-        status={status}
-        toast={toast}
-      />
 
-      {sideTab === "workspace" && (
-        <div style={{ position: "fixed", top: 0, right: 0, bottom: 0, width: "420px", zIndex: 55, display: "flex", flexDirection: "column" }}>
-          <WorkspacePanel
-            open={true}
-            onClose={() => setSideTab("sessions")}
-            notify={notify}
-          />
-        </div>
-      )}
 
-      {advOpen && (
-        <React.Suspense fallback={<div style={{padding:20}}>جاري التحميل…</div>}>
-          <Advanced
-            view={advView}
-            setView={setAdvView}
-            onClose={() => setAdvOpen(false)}
-            sessionId={sessionId}
-            notify={notify}
-            chatModel={chatModel}
-            setChatModel={setChatModel}
-            trace={trace}
-            toolLogs={toolLogs}
-            planSteps={planSteps}
-            status={status}
-            authToken={authToken}
-            onAfterRevert={() => loadSession(sessionId)}
-            onUsePrompt={(text) => { setInput(text); setAdvOpen(false); inputRef.current?.focus(); }}
-            execTaskId={execTask?.id}
-            onExecTask={(t2) => { setExecTask(t2); loadRuntime(); }}
-          />
-        </React.Suspense>
-      )}
 
       {settingsOpen && (
         <Settings

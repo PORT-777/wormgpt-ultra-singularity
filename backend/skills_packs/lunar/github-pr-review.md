@@ -1,7 +1,7 @@
 ---
-name: github-pr-review
+name: lunar-github-pr-review
 description: Post PR review comments using the GitHub API with inline comments, suggestions, and priority labels.
-trigger_when: [github-pr-review, github, review]
+trigger_when: [lunar-github-pr-review, github-pr-review]
 ---
 Post structured code review feedback using the GitHub API with inline comments on specific lines.
 Windows PowerShell equivalents for JSON file creation, temp paths, line lookup, and fallback `curl` are in `references/windows.md`.

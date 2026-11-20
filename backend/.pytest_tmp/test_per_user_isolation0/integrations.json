@@ -18,17 +18,17 @@
       "workspace_name": null,
       "status": "connected",
       "last_error": null,
-      "created_at": "2026-11-20T11:46:57.517951+00:00",
-      "updated_at": "2026-11-20T11:46:57.517957+00:00",
+      "created_at": "2026-11-20T13:51:48.054262+00:00",
+      "updated_at": "2026-11-20T13:51:48.054271+00:00",
       "last_refreshed_at": null,
-      "secrets": "Z0FBQUFBQnJBRE14MzFRamZIMmZyQmg1aExrSWd4bzQxNm9YbnFWWFlsOTgtVGlhZHBfdXRDdXJ3TUhGSzBRWmxBQVUzOHBIcTV6ZXNEMU8zRFF0STBqQWNLWUF6dnk0dWtXX2lhQ21PdWlaTnR4aGtlMkJIeHpneXg5eHJoQjdfaXp6SmdKaktiaWRoQzQxaWhGOF8zNlQzWENmMC1HY052S25BSXNiRU5PbXY5Q3MzUUNLekdBPQ=="
+      "secrets": "Z0FBQUFBQnJBRkIwUWRuLUUtRnBSUXBfbTJNNEFQVXlVc3pCSTJmcmU3NW9aaUpDMDRiRkNYTUNHVTZfdTE2SVdZSm1lcXlXelV5N2t5QnM0blRRWEVBOU1UaEhZRFlTaWtxYm83M3V6RlJ6SG1vVWpfdmE5T3ZQTWhRWHk3eVlLNjhHa0lWTnM4ZlFRZXBDdEF1aUN2UWFCWGFoVVhhOUZPWWRPLVBYWXhUNmhVcDB2elRIbmdJPQ=="
     }
   },
   "history": [
     {
-      "id": "aa64184ec8488ee4",
-      "at": "2026-11-20T11:46:57.518413+00:00",
-      "timestamp": 1795175217.5184193,
+      "id": "0538434403220aad",
+      "at": "2026-11-20T13:51:48.054859+00:00",
+      "timestamp": 1795182708.0548651,
       "user_id": "u1",
       "plugin_id": "github",
       "action": "connect",

@@ -1,7 +1,7 @@
 ---
-name: technical-writing
+name: lunar-technical-writing
 description: Guides technical explanations toward flowing, direct, conversational prose. This skill should be used for engineering chat, design discussion, architecture analysis, code-review explanations, and technical recommendations that should be concise without becoming fragmented or vague.
-trigger_when: [technical-writing, technical, writing]
+trigger_when: [lunar-technical-writing, technical-writing]
 ---
 Write the way a sharp senior engineer speaks in chat: direct, conversational, and confident. Favor flowing technical prose over report language, slide-deck fragments, or documentation boilerplate.
 

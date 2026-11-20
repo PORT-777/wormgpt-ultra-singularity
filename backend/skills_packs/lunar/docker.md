@@ -1,7 +1,7 @@
 ---
-name: docker
+name: lunar-docker
 description: Run Docker commands within a container environment, including starting the Docker daemon and managing containers. Use when building, running, or managing Docker containers and images.
-trigger_when: [docker, docker]
+trigger_when: [lunar-docker, docker]
 ---
 Please check if docker is already installed. If so, to start Docker in a container environment:
 

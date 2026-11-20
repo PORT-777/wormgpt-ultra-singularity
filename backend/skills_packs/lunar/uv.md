@@ -1,7 +1,7 @@
 ---
-name: uv
+name: lunar-uv
 description: If the project uses uv, use this skill. Use this skill to create/manage Python projects and environments with `uv`, add/remove dependencies, sync a project from `uv.lock`, and run commands in the project environment.
-trigger_when: [uv]
+trigger_when: [lunar-uv, uv]
 ---
 Use `uv` as the default tool for Python dependency + environment management when the repo has `uv.lock`, mentions `uv` in its docs/Makefile, or already uses a `.venv` created by `uv`.
 

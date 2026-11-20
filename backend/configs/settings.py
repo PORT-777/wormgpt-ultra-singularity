@@ -46,7 +46,7 @@ GROQ_MODEL: str = os.getenv("GROQ_MODEL", "openai/gpt-oss-120b")
 GROQ_MAX_TOKENS: int = int(os.getenv("GROQ_MAX_TOKENS", "700"))
 
 GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "").strip()
-GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
 
 HF_API_KEY: str = os.getenv("HF_API_KEY", "").strip()
 HF_MODEL: str = os.getenv("HF_MODEL", "meta-llama/Meta-Llama-3-8B-Instruct")
@@ -152,7 +152,7 @@ GROQ_MODEL_FALLBACKS = [m.strip() for m in os.getenv(
 
 GEMINI_MODEL_FALLBACKS = [m.strip() for m in os.getenv(
     "GEMINI_MODEL_FALLBACKS",
-    "gemini-2.5-flash-lite,gemini-flash-latest"
+    "gemini-3.1-flash-lite,gemini-flash-latest"
 ).split(",") if m.strip()]
 
 HF_MODEL_FALLBACKS = [m.strip() for m in os.getenv(

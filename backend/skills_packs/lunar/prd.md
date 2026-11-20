@@ -1,7 +1,7 @@
 ---
-name: prd
+name: lunar-prd
 description: "Generate a Product Requirements Document (PRD) for a new feature. Use when planning a feature, starting a new project, or when asked to create a PRD."
-trigger_when: [prd, prd]
+trigger_when: [lunar-prd, prd]
 ---
 Create detailed Product Requirements Documents that are clear, actionable, and suitable for implementation.
 

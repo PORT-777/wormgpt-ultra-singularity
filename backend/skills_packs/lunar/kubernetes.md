@@ -1,7 +1,7 @@
 ---
-name: kubernetes
+name: lunar-kubernetes
 description: Set up and manage local Kubernetes clusters using KIND (Kubernetes IN Docker). Use when testing Kubernetes applications locally or developing cloud-native workloads.
-trigger_when: [kubernetes, kubernetes]
+trigger_when: [lunar-kubernetes, kubernetes]
 ---
 KIND (Kubernetes IN Docker) is a tool for running local Kubernetes clusters using Docker containers as nodes. It's designed for testing Kubernetes applications locally.
 

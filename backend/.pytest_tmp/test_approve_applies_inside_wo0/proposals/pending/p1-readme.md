@@ -1,7 +1,7 @@
 # Proposal #1: patch a
 
 - target: `docs/readme.md`
-- submitted: 2026-11-20 13:47
+- submitted: 2026-11-20 15:51
 
 ## Rationale
 why

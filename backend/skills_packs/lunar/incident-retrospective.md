@@ -1,11 +1,11 @@
 ---
-name: incident-retrospective
+name: lunar-incident-retrospective
 description: >
   Create an automation that drafts incident retrospectives. Gathers
   incident-channel messages from Slack, collects linked tickets and follow-ups
   from Linear, and publishes a retrospective draft to Notion with a timeline,
   impact summary, root-cause hypotheses, and action items.
-trigger_when: [incident-retrospective, incident, retrospective]
+trigger_when: [lunar-incident-retrospective, incident-retrospective]
 ---
 Set up an automation that drafts incident retrospectives by pulling data from
 Slack, Linear, and Notion.

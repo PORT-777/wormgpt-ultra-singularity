@@ -112,6 +112,140 @@
   opacity: 1;
 }
 
+/* ---- Strong interactive layer: icons, glow, motion ---- */
+@keyframes p7-orbit {
+  0% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(180deg) scale(1.06); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+
+@keyframes p7-aurora {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes p7-typing {
+  0%, 60%, 100% { transform: translateY(0); opacity: .45; }
+  30% { transform: translateY(-4px); opacity: 1; }
+}
+
+@keyframes p7-send-pulse {
+  0% { box-shadow: 0 0 0 0 var(--accent-55), 0 6px 18px rgba(239,35,60,.35); }
+  70% { box-shadow: 0 0 0 16px rgba(239,35,60,0), 0 6px 18px rgba(239,35,60,.2); }
+  100% { box-shadow: 0 0 0 0 rgba(239,35,60,0), 0 6px 18px rgba(239,35,60,.35); }
+}
+
+@keyframes p7-slide-in {
+  from { opacity: 0; transform: translateX(-10px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* Brand + sidebar identity */
+.brand-mark {
+  background: linear-gradient(135deg, var(--accent), #ff8a3d, var(--accent));
+  background-size: 200% 200%;
+  animation: p7-aurora 7s ease infinite;
+  box-shadow: 0 0 18px var(--accent-28);
+  transition: transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+.side-brand:hover .brand-mark { transform: rotate(-8deg) scale(1.08); box-shadow: 0 0 28px var(--accent-45); }
+.brand-name { text-shadow: 0 0 14px rgba(239,35,60,.25); }
+
+.side-new {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(120deg, var(--accent-press), var(--accent), var(--accent-hover));
+  background-size: 200% 100%;
+  transition: background-position .5s ease, transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+.side-new:hover { background-position: 100% 0; transform: translateY(-2px); box-shadow: 0 8px 22px var(--accent-28); }
+.side-new svg { animation: p7-float 3s ease-in-out infinite; }
+.side-item { transition: background var(--dur) var(--ease), transform var(--dur) var(--ease), color var(--dur) var(--ease); }
+.side-item:hover { transform: translateX(3px); }
+.session-item { animation: p7-slide-in .25s var(--ease) both; }
+
+/* Composer focus beam */
+.composer2 {
+  position: relative;
+  transition: box-shadow var(--dur) var(--ease), border-color var(--dur) var(--ease), transform var(--dur) var(--ease);
+}
+.composer2::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(120deg, transparent 10%, var(--accent) 40%, #ff8a3d 55%, transparent 85%);
+  background-size: 250% 100%;
+  opacity: 0;
+  pointer-events: none;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  -webkit-mask-composite: xor;
+  transition: opacity var(--dur) var(--ease);
+}
+.composer2:focus-within::before { opacity: 1; animation: p7-aurora 4s linear infinite; }
+.composer2:focus-within { transform: translateY(-1px); box-shadow: 0 10px 34px rgba(0,0,0,.42); }
+.composer2 textarea { caret-color: var(--accent-hover); }
+
+/* Tool icons */
+.tool-btn svg { transition: transform var(--dur) var(--ease), filter var(--dur) var(--ease); }
+.tool-btn:hover svg { transform: rotate(12deg) scale(1.2); filter: drop-shadow(0 0 6px var(--accent-45)); }
+
+/* Send button is the primary interaction */
+.send-btn {
+  background: linear-gradient(135deg, var(--accent-press), var(--accent), var(--accent-hover));
+  box-shadow: 0 6px 18px rgba(239,35,60,.35);
+  animation: p7-send-pulse 3.4s ease-in-out infinite;
+}
+.send-btn:not(:disabled):hover { transform: translateY(-2px) scale(1.06); }
+.send-btn:not(:disabled):active { transform: scale(.94); }
+.send-btn svg { transition: transform var(--dur) var(--ease); }
+.send-btn:hover svg { transform: translateY(-2px) rotate(-10deg); }
+.send-btn.stop { animation: p7-pulse 1.4s ease-in-out infinite; }
+
+/* Message presence */
+.msg2 { animation: p7-rise .3s var(--ease) both; }
+.msg2 .msg-avatar { transition: transform var(--dur) var(--ease); }
+.msg2:hover .msg-avatar { transform: rotate(10deg) scale(1.12); }
+.msg2.assistant .msg-avatar { animation: p7-orbit 9s linear infinite; }
+.bubble2 { transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease); }
+.bubble2:hover { border-color: var(--accent-28); box-shadow: 0 6px 20px rgba(0,0,0,.28); }
+
+/* Streaming/typing dots */
+.stream-caret, .typing-dots i, .status-dot {
+  display: inline-block;
+  animation: p7-typing 1.1s ease-in-out infinite;
+}
+.typing-dots i:nth-child(2) { animation-delay: .15s; }
+.typing-dots i:nth-child(3) { animation-delay: .3s; }
+
+/* Welcome action cards */
+.welcome-prompt, .quick-card, .welcome button {
+  transition: transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+.welcome-prompt:hover, .quick-card:hover, .welcome button:hover {
+  transform: translateY(-3px) scale(1.01);
+  border-color: var(--accent-40);
+  box-shadow: 0 10px 26px rgba(0,0,0,.4), 0 0 0 1px var(--accent-08);
+}
+.welcome-prompt svg, .welcome button svg { transition: transform var(--dur) var(--ease), filter var(--dur) var(--ease); }
+.welcome-prompt:hover svg, .welcome button:hover svg { transform: scale(1.2) rotate(-6deg); filter: drop-shadow(0 0 7px var(--accent-45)); }
+
+/* Connection dot stronger pulse */
+.conn-dot.ok { background: #22c55e; animation: p7-pulse 2.2s ease-in-out infinite; }
+.conn-dot.run { background: #f59e0b; animation: p7-pulse 1.4s ease-in-out infinite; }
+.conn-dot.err { background: var(--accent); animation: p7-pulse 1.8s ease-in-out infinite; }
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .brand-mark, .side-new svg, .send-btn, .send-btn.stop, .msg2.assistant .msg-avatar,
+  .composer2:focus-within::before, .stream-caret, .typing-dots i, .status-dot,
+  .conn-dot.ok, .conn-dot.run, .conn-dot.err { animation: none !important; }
+}
+
 /* Digestible motion for users who prefer less */
 @media (prefers-reduced-motion: reduce) {
   .pl-card, .vendor-card, .ctx-card, .vendor-icon, .conn-dot.ok,

@@ -1,7 +1,7 @@
 ---
-name: security
+name: lunar-security
 description: Security best practices for secure coding, authentication, authorization, and data protection. Use when developing features that handle sensitive data, user authentication, or require security review.
-trigger_when: [security, security]
+trigger_when: [lunar-security, security]
 ---
 This document provides guidance on security best practices
 

@@ -1,7 +1,7 @@
 ---
-name: code-review
+name: lunar-code-review
 description: Review code changes for material correctness, security, compatibility, and maintainability risks, grounded in the current repository and acceptance criteria.
-trigger_when: [code-review, code, review]
+trigger_when: [lunar-code-review, code-review]
 ---
 Review the current change without modifying code. The goal is a reliable merge
 decision with a small number of proven findings. Be direct and constructive.

@@ -1,7 +1,7 @@
 ---
-name: code-simplifier
+name: lunar-code-simplifier
 description: Simplifies and refines code for clarity, consistency, and maintainability while preserving all functionality. Analyzes recently modified code across three dimensions - code reuse, code quality, and efficiency - and provides actionable improvement suggestions. This skill should be used when the user asks to "simplify code", "refine code", "clean up code", "improve code quality", or requests a simplification review of recent changes.
-trigger_when: [code-simplifier, code, simplifier]
+trigger_when: [lunar-code-simplifier, code-simplifier]
 ---
 Analyze recently modified code and suggest refinements that improve clarity, consistency, and maintainability - without changing what the code does. The review covers three complementary aspects:
 

@@ -1,12 +1,12 @@
 ---
-name: software-factory
+name: lunar-software-factory
 description: >
   Set up an OpenHands "software factory" on GitHub fast: ask only for the
   repositories and where tickets live (GitHub issues, Jira or Linear), create a working issue-to-PR and PR-review pipeline from the
   automation catalog with defaults, show what runs, then let the user stop or
   extend it one step at a time (tune settings, AGENTS.md maintainer,
   auto-merge, stale-CI and QA add-ons).
-trigger_when: [software-factory, software, factory]
+trigger_when: [lunar-software-factory, software-factory]
 ---
 Build a GitHub software factory from unmodified automation catalog bundles
 (`automations/catalog/<id>/manifest.json`); a Jira or Linear station is created

@@ -44,11 +44,13 @@ def test_chat_executes_code_intelligence_for_selected_project(tmp_path, monkeypa
 
     from backend.main import app
 
+    sid = "itest-session-001"
     client = TestClient(app)
     response = client.post(
         "/api/chat",
         json={
             "message": "scan the selected project",
+            "session_id": sid,
             "project_path": str(tmp_path),
             "stream": False,
             "model": "auto",
@@ -60,3 +62,9 @@ def test_chat_executes_code_intelligence_for_selected_project(tmp_path, monkeypa
     assert body["project_path"] == str(tmp_path)
     assert calls, "CodeIntelligence was not executed from the chat endpoint"
     assert calls[0]["action"] == "scan_project"
+
+    import storage
+
+    rows = storage.get_history(sid, limit=10)
+    assert any(r["role"] == "user" and "scan the selected" in r["content"] for r in rows)
+    assert any(r["role"] == "assistant" and r["content"] for r in rows)

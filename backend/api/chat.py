@@ -182,6 +182,15 @@ async def ui_chat(request: Request) -> Any:
     if not user:
         user = str(req.get("message") or "").strip()
 
+    sid = str(req.get("session_id") or "").strip()
+    try:
+        import storage
+
+        if sid and user:
+            storage.add_message(sid, "user", user)
+    except Exception as exc:
+        logger.error("session user-message write failed: %s", exc)
+
     project_path = str(req.get("project_path") or req.get("workspace_path") or "").strip()
     try:
         from tools.base import set_project
@@ -216,6 +225,8 @@ async def ui_chat(request: Request) -> Any:
     model_name = str(req.get("model") or "auto")
     stream = bool(req.get("stream", True))
 
+    streamed_final: List[str] = []
+
     async def events():
         try:
             async for ev in ENGINE.run_stream(
@@ -227,9 +238,18 @@ async def ui_chat(request: Request) -> Any:
                 depth=str(req.get("depth") or "standard"),
                 system_prompt=system_prompt,
             ):
+                if ev.get("type") == "final" and ev.get("data"):
+                    streamed_final.append(str(ev["data"]))
                 yield f"data: {json.dumps(ev, default=str, ensure_ascii=False)}\n\n"
         except Exception as exc:
             yield f"data: {json.dumps({'type': 'error', 'data': f'{type(exc).__name__}: {exc}'}, ensure_ascii=False)}\n\n"
+        if sid and streamed_final:
+            try:
+                import storage
+
+                storage.add_message(sid, "assistant", streamed_final[-1])
+            except Exception as exc:
+                logger.error("session assistant-message write failed: %s", exc)
         yield "data: [DONE]\n\n"
 
     if stream:

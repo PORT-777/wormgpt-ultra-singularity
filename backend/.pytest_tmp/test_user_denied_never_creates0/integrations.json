@@ -3,9 +3,9 @@
   "connections": {},
   "history": [
     {
-      "id": "8a2c4d3cc85baf51",
-      "at": "2026-11-20T11:46:57.483203+00:00",
-      "timestamp": 1795175217.483216,
+      "id": "a8a3e03eab5ee86e",
+      "at": "2026-11-20T13:51:48.023482+00:00",
+      "timestamp": 1795182708.0234907,
       "user_id": "u1",
       "plugin_id": "github",
       "action": "permission_denied",

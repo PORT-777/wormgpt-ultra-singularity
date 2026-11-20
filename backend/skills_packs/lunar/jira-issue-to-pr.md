@@ -1,5 +1,5 @@
 ---
-name: jira-issue-to-pr
+name: lunar-jira-issue-to-pr
 description: >
   This skill should be used when the user asks to "set up a Jira automation to create pull requests",
   "poll Jira for create-pr issues", "automatically create GitHub PRs from Jira tickets",
@@ -12,7 +12,7 @@ description: >
   that opens a pull request on GitHub (the default), a merge request on GitLab, or a pull
   request on Bitbucket for each new issue found, chosen with git_provider. The target
   repository is read from the body of the Jira ticket - no repo parameter is required at deploy time.
-trigger_when: [jira-issue-to-pr, jira, issue]
+trigger_when: [lunar-jira-issue-to-pr, jira-issue-to-pr]
 ---
 Deploys a cron automation that polls a Jira Cloud instance for open issues carrying a
 configurable label and, for each new issue, starts an OpenHands agent conversation that

@@ -1,7 +1,7 @@
 ---
-name: learn-from-code-review
+name: lunar-learn-from-code-review
 description: Distill code review feedback from GitHub PRs into reusable skills and guidelines. This skill should be used when users ask to "learn from code reviews", "distill PR feedback", "improve coding standards", "extract learnings from reviews", or want to generate skills/guidelines from historical review comments.
-trigger_when: [learn-from-code-review, learn, from, code, review]
+trigger_when: [lunar-learn-from-code-review, learn-from-code-review]
 ---
 Analyze code review comments from GitHub pull requests and distill them into reusable skills or repository guidelines that improve future code quality.
 

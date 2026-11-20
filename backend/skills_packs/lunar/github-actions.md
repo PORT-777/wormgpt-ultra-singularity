@@ -1,7 +1,7 @@
 ---
-name: github-actions
+name: lunar-github-actions
 description: Create, debug, and test GitHub Actions workflows and custom actions. Use when building CI/CD pipelines, automating workflows, or troubleshooting GitHub Actions.
-trigger_when: [github-actions, github, actions]
+trigger_when: [lunar-github-actions, github-actions]
 ---
 Add debug steps that print non-secret parameters when:
 - Creating a new action, OR

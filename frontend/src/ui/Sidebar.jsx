@@ -36,13 +36,7 @@ const GROUPS = [
   ["older", t("أقدم", "Older")],
 ];
 
-const NAV = [
-  { id: "agents", icon: "bot", label: t("وكلاء الذكاء", "AI Agents") },
-  { id: "library", icon: "book", label: t("قاعدة المعرفة", "Knowledge Base") },
-  { id: "files", icon: "folderOpen", label: t("الملفات والمخرجات", "Files & Artifacts") },
-  { id: "prompts", icon: "bookmark", label: t("البرومبتات المحفوظة", "Saved Prompts") },
-  { id: "extensions", icon: "plug", label: t("الإضافات", "Extensions") },
-];
+const NAV = [];
 
 export default function Sidebar({
   sessions = [],

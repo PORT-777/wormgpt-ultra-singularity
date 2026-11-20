@@ -1,7 +1,7 @@
 ---
-name: ssh
+name: lunar-ssh
 description: Establish and manage SSH connections to remote machines, including key generation, configuration, and file transfers. Use when connecting to remote servers, executing remote commands, or transferring files via SCP.
-trigger_when: [ssh, ssh]
+trigger_when: [lunar-ssh, ssh]
 ---
 This skill provides capabilities for establishing and managing SSH connections to remote machines.
 Windows PowerShell equivalents for SSH config creation, key paths, ssh-agent, and permissions are in `references/windows.md`.

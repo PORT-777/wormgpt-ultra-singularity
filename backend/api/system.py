@@ -199,6 +199,24 @@ async def api_gamification(user_id: str = "default_user"):
     return gamification.state(user_id) if gamification else {}
 
 
+@router.post("/api/gamification/award")
+async def api_gamification_award(payload: dict = Body(...)):
+    if not gamification:
+        return {"ok": False, "awarded": 0}
+    event = str(payload.get("event") or "").strip().lower()
+    if event not in getattr(gamification, "EVENTS", {}):
+        return {"ok": True, "awarded": 0, "event": event, "note": "unknown XP event ignored"}
+    try:
+        return gamification.award(
+            event,
+            str(payload.get("user_id") or "default_user"),
+            payload.get("amount"),
+            payload.get("meta"),
+        )
+    except Exception as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+
 @router.post("/api/gamification/reset")
 async def api_gamification_reset(user_id: str = "default_user"):
     return gamification.reset(user_id) if gamification else {}

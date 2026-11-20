@@ -1,7 +1,7 @@
 ---
-name: qa-changes
+name: lunar-qa-changes
 description: This skill should be used when the user asks to "QA a pull request", "test PR changes", "verify a PR works", "functionally test changes", or when an automated workflow triggers QA validation of code changes. Provides a structured methodology for setting up the environment, exercising changed behavior, and reporting results.
-trigger_when: [qa-changes, changes]
+trigger_when: [lunar-qa-changes, qa-changes]
 ---
 Validate pull request changes by actually running the code — not just reading it. The goal is to verify that new behavior works as the PR claims, existing behavior is not broken, and the repository remains healthy after the change.
 

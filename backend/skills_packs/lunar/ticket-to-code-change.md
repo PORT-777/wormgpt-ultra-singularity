@@ -1,5 +1,5 @@
 ---
-name: ticket-to-code-change
+name: lunar-ticket-to-code-change
 description: >
   Set up a ticket-to-code-change automation using Linear as the issue tracker
   and GitHub, GitLab, or Bitbucket as the source-control provider. The Jira
@@ -7,7 +7,7 @@ description: >
   Watches for implementation-ready tickets, starts an OpenHands conversation
   to implement and test the request, opens a pull or merge request, and links
   the result back to the ticket.
-trigger_when: [ticket-to-code-change, ticket, code, change]
+trigger_when: [lunar-ticket-to-code-change, ticket-to-code-change]
 ---
 Create an automation that turns implementation-ready tickets into tested pull
 requests or merge requests.

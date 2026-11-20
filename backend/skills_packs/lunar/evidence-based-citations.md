@@ -1,7 +1,7 @@
 ---
-name: evidence-based-citations
+name: lunar-evidence-based-citations
 description: Back factual claims and field values with official, verifiable sources. Use when the user asks to fill fields, answer questions, or make claims that must be supported by an exact quote and an official link.
-trigger_when: [evidence-based-citations, evidence, based, citations]
+trigger_when: [lunar-evidence-based-citations, evidence-based-citations]
 ---
 The user wants every field value or factual claim you produce in the current response to be backed by an official, verifiable source. Apply this skill to the response that triggered it; do not assume it stays active for the rest of the conversation unless the user clearly asks for it to.
 

@@ -1,7 +1,7 @@
 # Proposal #1: fix fusion
 
 - target: `notes.md`
-- submitted: 2026-11-20 13:47
+- submitted: 2026-11-20 15:51
 
 ## Rationale
 clearer wording
