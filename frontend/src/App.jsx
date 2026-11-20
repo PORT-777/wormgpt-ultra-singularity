@@ -797,7 +797,15 @@ export default function App(){
             </span>
           </div>
           <div className="top-spacer" />
-          <div className="top-actions"><span className={`conn-dot ${connection.state === "connected" ? (running ? "run" : "ok") : "err"}`} title={connection.detail || connection.state} /></div>
+          <div className="top-actions">
+            <span className={`conn-dot ${connection.state === "connected" ? (running ? "run" : "ok") : "err"}`} title={connection.detail || connection.state} />
+            <button type="button" className={`icon-btn ${fullAccess ? "on" : ""}`} title={fullAccess ? t("الوصول الكامل: مفعّل", "Full access: on") : t("الوصول الكامل: متوقف", "Full access: off")} aria-label="Full access" onClick={() => { if (!fullAccess && !window.confirm("Enable Full Access for this session? Backend permissions still apply.")) return; setFullAccess(v => !v); }}>
+              <Icon name={fullAccess ? "shield" : "lock"} size={16} />
+            </button>
+            <button type="button" className="icon-btn" title={t("الإضافات والتكاملات", "Plugins & integrations")} aria-label="Plugins" onClick={() => openAdvanced("plugins")}>
+              <Icon name="plug" size={16} />
+            </button>
+          </div>
         </header>
 
         <div className="chat-scroll">
@@ -939,6 +947,29 @@ export default function App(){
 
 
 
+
+      {advOpen && (
+        <React.Suspense fallback={<div style={{padding:20}}>جاري التحميل…</div>}>
+          <Advanced
+            view={advView}
+            setView={setAdvView}
+            onClose={() => setAdvOpen(false)}
+            sessionId={sessionId}
+            notify={notify}
+            chatModel={chatModel}
+            setChatModel={setChatModel}
+            trace={trace}
+            toolLogs={toolLogs}
+            planSteps={planSteps}
+            status={status}
+            authToken={authToken}
+            onAfterRevert={() => loadSession(sessionId)}
+            onUsePrompt={(text) => { setInput(text); setAdvOpen(false); inputRef.current?.focus(); }}
+            execTaskId={execTask?.id}
+            onExecTask={(t2) => { setExecTask(t2); loadRuntime(); }}
+          />
+        </React.Suspense>
+      )}
 
       {settingsOpen && (
         <Settings
