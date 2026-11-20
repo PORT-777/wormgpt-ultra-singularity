@@ -187,3 +187,7 @@ async def test_stream_call_surfaces_final_tokens():
         if kind == "stream":
             pieces.append(payload)
     assert "".join(pieces) == "hello "
+
+def test_arabic_refusal_detected():
+    assert agent_engine._REFUSAL_RE.search("أنا آسف، لا يمكنني مساعدتك في هذا الطلب")
+

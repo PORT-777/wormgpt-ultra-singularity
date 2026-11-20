@@ -119,9 +119,8 @@ EventDict = Dict
 FINAL_MARKER = re.compile(r"Final Answer\s*:\s*", re.IGNORECASE)
 
 _REFUSAL_RE = re.compile(
-
     r"(?i)\b(i can['\u2019]?t|i cannot|i won['\u2019]?t|i will not|i['\u2019]?m sorry|i am sorry|as an ai( language model)?|i['\u2019]?m (not able|unable)|cannot (help|assist|comply|provide|create|generate|write)|i (must|have to) (decline|refuse)|not able to (assist|help|provide)|i refuse)\b"
-
+    r"|(\u0623\u0646\u0627 \u0622\u0633\u0641|\u0623\u0639\u062a\u0630\u0631|\u0644\u0627 \u064a\u0645\u0643\u0646\u0646\u064a|\u0644\u0646 \u0623\u0633\u0627\u0639\u062f|\u0644\u0627 \u0623\u0633\u062a\u0637\u064a\u0639|\u0644\u0627 \u0623\u0642\u062f\u0631 \u0639\u0644\u0649|\u064a\u064f\u062d\u0638\u0648\u0631 \u062a\u0645\u0627\u0645|\u0644\u0627 \u064a\u062c\u0648\u0632)"
 )
 
 _REFUSAL_NUDGE = (

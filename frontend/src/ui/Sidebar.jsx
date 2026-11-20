@@ -206,7 +206,7 @@ export default function Sidebar({
           <div className="ctx-empty" style={{ paddingTop: 26 }}>
             {loading
               ? t("جارٍ تحميل المحادثات…", "Loading conversations…")
-              : (q ? t("لا توجد محادثات تطابق بحثك.", "No conversations match your search.") : t("لا توجد محادثات بعد.\nابدأ محادثة جديدة لتظهر هنا.", "No conversations yet.\nStart a new chat to see it here."))}
+              : (q ? t("لا توجد محادثات تطابق بحثك.", "No conversations match your search.") : t("لا توجد محادثات محفوظة بعد.\nأرسل أول رسالة في مربع الشات وستظهر هنا تلقائيًا.", "No saved conversations yet.\nSend your first message in the chat box and it will appear here automatically."))}
           </div>
         )}
       </div>

@@ -595,6 +595,7 @@ export default function App(){
     const finalText = (payload.attachments||[]).length ? `${text}\n\n[attachments]\n${(payload.attachments||[]).map(a=>`- ${a.name}: ${a.ok?"uploaded":"failed"}`).join("\n")}` : text;
     if(!override){ setInput(""); setAttachments([]); }
     setMessages(m=>[...m,{role:"user",content:finalText}]); setTrace([]); setToolLogs([]); setPlanSteps([]); setStreamText(""); setRunning(true);
+    window.dispatchEvent(new Event("xxxgpt:history-refresh"));
     const ctrl=new AbortController(); abortRef.current=ctrl;
     let gotAny=false;
     let interrupted=false;

@@ -1,6 +1,7 @@
 // @ts-nocheck
 import React, { useEffect, useRef, useState } from "react";
 import Icon from "../components/Icon.jsx";
+import ModePicker, { MODE_PLACEHOLDERS } from "../components/ModePicker.jsx";
 import { t } from "./i18n.js";
 
 export default function Composer({
@@ -71,7 +72,7 @@ export default function Composer({
                 submit();
               }
             }}
-            placeholder={running ? t("جارٍ العمل… اضغط Esc للإيقاف", "Working… press Esc to stop") : (t("اكتب رسالة إلى PORT 777…", "Message PORT 777…"))}
+            placeholder={running ? t("جارٍ العمل… اضغط Esc للإيقاف", "Working… press Esc to stop") : (MODE_PLACEHOLDERS[mode] || t("اكتب رسالة إلى PORT 777…", "Message PORT 777…"))}
             aria-label={t("الرسالة", "Message")}
             rows={1}
           />
@@ -97,6 +98,7 @@ export default function Composer({
               <Icon name="paperclip" size={16} />
             </button>
 
+            <ModePicker value={mode} onChange={onMode} />
 
             <span className="spacer" />
             {running ? (
