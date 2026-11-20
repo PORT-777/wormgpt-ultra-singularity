@@ -40,6 +40,7 @@ const NAV = [];
 
 export default function Sidebar({
   sessions = [],
+  loading = false,
   activeId,
   onSelect,
   onNew,
@@ -203,7 +204,9 @@ export default function Sidebar({
 
         {!filtered.length && (
           <div className="ctx-empty" style={{ paddingTop: 26 }}>
-            {q ? t("لا توجد محادثات تطابق بحثك.", "No conversations match your search.") : t("لا توجد محادثات بعد.\nابدأ محادثة جديدة لتظهر هنا.", "No conversations yet.\nStart a new chat to see it here.")}
+            {loading
+              ? t("جارٍ تحميل المحادثات…", "Loading conversations…")
+              : (q ? t("لا توجد محادثات تطابق بحثك.", "No conversations match your search.") : t("لا توجد محادثات بعد.\nابدأ محادثة جديدة لتظهر هنا.", "No conversations yet.\nStart a new chat to see it here."))}
           </div>
         )}
       </div>

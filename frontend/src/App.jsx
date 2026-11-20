@@ -181,6 +181,7 @@ export default function App(){
   const [attachments,setAttachments]=useState([]);
   const [paletteOpen,setPaletteOpen]=useState(false);
   const [paletteSessions,setPaletteSessions]=useState([]);
+  const [historyLoading,setHistoryLoading]=useState(true);
   const [connection,setConnection]=useState({state:"checking",detail:""});
   const [lastSseAt,setLastSseAt]=useState(null);
   const [pendingRetry,setPendingRetry]=useState(null);
@@ -245,6 +246,7 @@ export default function App(){
   },[toast,applyStatus]);
 
   const refreshHistory = useCallback(async()=>{
+    setHistoryLoading(true);
     try{
       const r=await fetch("/api/history",{headers:authToken?{Authorization:`Bearer ${authToken}`}:{},cache:"no-store"});
       const d=await r.json().catch(()=>[]);
@@ -252,7 +254,14 @@ export default function App(){
       return true;
     }
     catch{ return false; }
+    finally{ setHistoryLoading(false); }
   },[authToken]);
+
+  useEffect(()=>{
+    const onHistoryRefresh=()=>{ refreshHistory(); };
+    window.addEventListener("xxxgpt:history-refresh",onHistoryRefresh);
+    return ()=>window.removeEventListener("xxxgpt:history-refresh",onHistoryRefresh);
+  },[refreshHistory]);
 
   useEffect(()=>{ refreshStatus(true,"boot"); refreshHistory(); refreshWorkspaces(); },[refreshStatus,refreshHistory,refreshWorkspaces]);
   useEffect(()=>{ fetch("/api/workspace/list").then(r=>r.json()).then(d=>setProjectWorkspaces(Array.isArray(d?.workspaces)?d.workspaces:[])).catch(()=>{}); },[]);
@@ -762,6 +771,7 @@ export default function App(){
     <div className={`app2 ${sidebarCollapsed ? "sb-collapsed" : ""} ${ctxOpen ? "has-context" : ""} ${mobileNav ? "sb-open" : ""}`}>
       <Sidebar
         sessions={paletteSessions}
+        loading={historyLoading}
         activeId={sessionId}
         onSelect={(id) => { setMobileNav(false); loadSession(id); }}
         onNew={() => { setMobileNav(false); loadSession("new"); }}
