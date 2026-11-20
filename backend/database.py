@@ -421,8 +421,7 @@ def ensure_schema() -> None:
 def health() -> Dict[str, Any]:
     try:
         c = conn()
-        c.execute("SELECT 1")
-        c.fetchone()
+        c.execute("SELECT 1").fetchone()
         return {"backend": "postgresql" if IS_POSTGRES else "sqlite", "ok": True}
     except Exception as exc:
         return {

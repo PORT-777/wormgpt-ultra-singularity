@@ -72,7 +72,7 @@ def _manifest(meta: Dict[str, Any], pid: str) -> PluginManifest:
         author="PORT 777 AI",
         icon="📚",
         category=meta.get("category", "custom"),
-        tags=["vendor", "reference", repo_tags(meta)],
+        tags=["vendor", "reference", str(meta.get("keywords", ["reference"])[0])],
         auth_type="none",
         auth_config={},
         tools=_tools(pid, meta["id"]),
@@ -83,56 +83,59 @@ def _manifest(meta: Dict[str, Any], pid: str) -> PluginManifest:
     )
 
 
-def repo_tags(meta: Dict[str, Any]) -> str:
-    return str(meta.get("keywords", ["reference"])[0])
+class _VendorRepoPlugin(BasePlugin):
+    """Base implementation; `manifest` and `_repo_id` are set per subclass."""
+
+    manifest: PluginManifest
+    _repo_id: str = ""
+
+    def _validate_credentials(self) -> bool:
+        return True
+
+    async def test_connection(self) -> Dict[str, Any]:
+        info = vendor_hub.repo_info(self._repo_id)
+        return {"status": "ok" if info["checked_out"] else "missing",
+                "repo": self._repo_id, "skills": info["skills"]}
+
+    async def execute(self, tool_name: str, parameters: Dict[str, Any]) -> Any:
+        repo_id = self._repo_id
+        suffix = tool_name.split(".", 1)[-1] if "." in tool_name else tool_name
+        params = parameters or {}
+        if suffix == "info":
+            return vendor_hub.repo_info(repo_id)
+        if suffix == "skills":
+            return vendor_hub.search(str(params.get("query") or repo_id),
+                                     repo_id, int(params.get("limit") or 10))
+        if suffix == "skill_read":
+            return vendor_hub.read_skill(str(params.get("skill_id") or ""))
+        if suffix == "search":
+            return vendor_hub.repo_search(repo_id, str(params.get("query") or ""),
+                                          int(params.get("limit") or 20))
+        if suffix == "list":
+            return vendor_hub.list_files(repo_id, str(params.get("path") or ""),
+                                         int(params.get("limit") or 100))
+        if suffix == "read":
+            return vendor_hub.read_file(repo_id, str(params.get("path") or ""))
+        if suffix == "plugins_list":
+            return vendor_hub.list_files(repo_id, "plugins", 300)
+        if suffix == "themes_list":
+            return vendor_hub.list_files(repo_id, "themes", 300)
+        if suffix == "agents_list":
+            return vendor_hub.list_files(repo_id, ".agents", 300)
+        if suffix == "categories":
+            return vendor_hub.list_files(repo_id, "plugins", 300)
+        raise ValueError(f"unknown tool: {tool_name}")
 
 
 def _make_plugin(meta: Dict[str, Any], pid: str):
-    manifest = _manifest(meta, pid)
     repo_id = meta["id"]
-
-    class VendorRepoPlugin(BasePlugin):
-        manifest = manifest
-
-        def _validate_credentials(self) -> bool:
-            return True
-
-        async def test_connection(self) -> Dict[str, Any]:
-            info = vendor_hub.repo_info(repo_id)
-            return {"status": "ok" if info["checked_out"] else "missing",
-                    "repo": repo_id, "skills": info["skills"]}
-
-        async def execute(self, tool_name: str, parameters: Dict[str, Any]) -> Any:
-            suffix = tool_name.split(".", 1)[-1] if "." in tool_name else tool_name
-            params = parameters or {}
-            if suffix == "info":
-                return vendor_hub.repo_info(repo_id)
-            if suffix == "skills":
-                return vendor_hub.search(str(params.get("query") or repo_id),
-                                         repo_id, int(params.get("limit") or 10))
-            if suffix == "skill_read":
-                return vendor_hub.read_skill(str(params.get("skill_id") or ""))
-            if suffix == "search":
-                return vendor_hub.repo_search(repo_id, str(params.get("query") or ""),
-                                              int(params.get("limit") or 20))
-            if suffix == "list":
-                return vendor_hub.list_files(repo_id, str(params.get("path") or ""),
-                                             int(params.get("limit") or 100))
-            if suffix == "read":
-                return vendor_hub.read_file(repo_id, str(params.get("path") or ""))
-            if suffix == "plugins_list":
-                return vendor_hub.list_files(repo_id, "plugins", 300)
-            if suffix == "themes_list":
-                return vendor_hub.list_files(repo_id, "themes", 300)
-            if suffix == "agents_list":
-                return vendor_hub.list_files(repo_id, ".agents", 300)
-            if suffix == "categories":
-                return vendor_hub.list_files(repo_id, "plugins", 300)
-            raise ValueError(f"unknown tool: {tool_name}")
-
-    VendorRepoPlugin.__name__ = f"Vendor{repo_id.replace('-', '_')}"
-    VendorRepoPlugin.__qualname__ = VendorRepoPlugin.__name__
-    return VendorRepoPlugin
+    name = f"Vendor{repo_id.replace('-', '_')}"
+    plugin_cls = type(name, (_VendorRepoPlugin,), {
+        "manifest": _manifest(meta, pid),
+        "_repo_id": repo_id,
+        "__module__": __name__,
+    })
+    return plugin_cls
 
 
 for _meta in vendor_hub.REPOS:

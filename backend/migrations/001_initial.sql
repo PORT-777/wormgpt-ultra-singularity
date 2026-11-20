@@ -1,5 +1,5 @@
 -- PORT 777 AI — initial PostgreSQL/Supabase schema.
--- Idempotent and additive only. No DROP, no TRUNCATE, no data rewrites.
+-- Idempotent and additive only. No destructive statements or data rewrites.
 
 CREATE TABLE IF NOT EXISTS sessions (
   id TEXT PRIMARY KEY,

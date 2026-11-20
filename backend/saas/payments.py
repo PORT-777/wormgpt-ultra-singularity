@@ -10,7 +10,11 @@ import urllib.error
 import urllib.request
 from typing import Any, Dict
 
-from .. import database
+try:
+    from .. import database
+except ImportError:  # imported as top-level `saas` package in tests
+    import database
+
 from . import db, plans
 
 API = "https://accept.paymob.com/api"
@@ -116,20 +120,34 @@ def create_checkout(user_id: str, plan_id: str, period: str = "monthly") -> Dict
 def handle_callback(data: Dict[str, Any], supplied_hmac: str) -> Dict[str, Any]:
     if not verify_hmac(data, supplied_hmac):
         raise ValueError("invalid Paymob HMAC signature")
-    obj = data.get("obj") or {}
-    txn = str(obj.get("id") or "")
-    order = obj.get("order") or {}
-    merchant_order_id = str(order.get("merchant_order_id") or "")
+    # Paymob sends two shapes: "Processed" callbacks nest everything in obj,
+    # while "Response" callbacks are flat and use dotted keys (order.id).
+    obj = data.get("obj") if isinstance(data.get("obj"), dict) else data
+    txn = str(_dig(obj, "obj.id") or _dig(obj, "id") or "")
+    merchant_order_id = str(
+        _dig(obj, "obj.order.merchant_order_id")
+        or _dig(obj, "order.merchant_order_id")
+        or _dig(obj, "merchant_order_id")
+        or ""
+    )
+    order_id = str(_dig(obj, "obj.order.id") or _dig(obj, "order.id")
+                   or _dig(obj, "order_id") or "")
     c = db.conn()
     # Payment update + subscription activation must be atomic, and concurrent
     # callbacks for the same transaction must not both grant access.
     with database.transaction(c):
         lock = " FOR UPDATE" if database.IS_POSTGRES else ""
-        row = c.execute(
-            "SELECT * FROM saas_payments WHERE id=? OR provider_ref=?" + lock,
-            (merchant_order_id, str(order.get("id") or "")),
-        ).fetchone()
-        if not row:
+        # Prefer our own payment id; fall back to the provider order reference.
+        row = None
+        if merchant_order_id:
+            row = c.execute(
+                "SELECT * FROM saas_payments WHERE id=?" + lock, (merchant_order_id,)
+            ).fetchone()
+        if row is None and order_id:
+            row = c.execute(
+                "SELECT * FROM saas_payments WHERE provider_ref=?" + lock, (order_id,)
+            ).fetchone()
+        if row is None:
             raise ValueError("unknown payment order")
         existing = c.execute(
             "SELECT 1 FROM saas_payments WHERE provider='paymob' AND provider_txn_id=?" + lock,
@@ -137,8 +155,8 @@ def handle_callback(data: Dict[str, Any], supplied_hmac: str) -> Dict[str, Any]:
         ).fetchone()
         if existing:
             return {"ok": True, "duplicate": True, "payment_id": row["id"]}
-        success = bool(obj.get("success"))
-        amount_cents = int(obj.get("amount_cents") or 0)
+        success = str(_dig(obj, "obj.success") or _dig(obj, "success")).lower() in ("true", "1")
+        amount_cents = int(_dig(obj, "obj.amount_cents") or _dig(obj, "amount_cents") or 0)
         expected_cents = int(round(float(row["amount"]) * 100))
         if success and amount_cents != expected_cents:
             success = False

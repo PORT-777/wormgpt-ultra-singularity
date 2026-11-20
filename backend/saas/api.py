@@ -6,7 +6,12 @@ from typing import Any, Dict, Optional
 from fastapi import APIRouter, Body, File, Form, Header, HTTPException, Request, UploadFile
 from fastapi.responses import Response
 
-from .. import database, storage_backends
+try:
+    from .. import database, storage_backends
+except ImportError:  # imported as top-level `saas` package in tests
+    import database
+    import storage_backends
+
 from . import api_keys as keys
 from . import auth, db, files, payments, platform, plans, usage
 

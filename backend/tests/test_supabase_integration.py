@@ -52,7 +52,8 @@ def _account():
     return email, password, token, {"Authorization": f"Bearer {token}"}
 
 
-def test_sql_translation_for_postgres():
+def test_sql_translation_for_postgres(monkeypatch):
+    monkeypatch.setattr(database, "IS_POSTGRES", True)
     assert database._pg_placeholders("SELECT * FROM t WHERE a=? AND b='?'") == \
         "SELECT * FROM t WHERE a=%s AND b='?'"
     assert "ON CONFLICT (module, key) DO UPDATE" in database._pg_upsert(

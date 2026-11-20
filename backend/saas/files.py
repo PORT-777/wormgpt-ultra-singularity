@@ -6,8 +6,13 @@ import secrets
 import time
 from typing import Any, Dict, List, Optional
 
-from .. import database
-from .. import storage_backends as objects
+try:
+    from .. import database
+    from .. import storage_backends as objects
+except ImportError:  # imported as top-level `saas` package in tests
+    import database
+    import storage_backends as objects
+
 from . import db
 
 

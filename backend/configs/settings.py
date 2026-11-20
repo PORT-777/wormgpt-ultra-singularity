@@ -125,8 +125,10 @@ SKILLS_ENABLED = os.getenv("SKILLS_ENABLED", "true").lower() == "true"
 SKILLS_DIR = BACKEND_DIR / "skills_packs"
 SKILLS_DIR.mkdir(exist_ok=True)
 MAX_SKILL_CHARS = 1800      # per pack, so prompts stay sane
-MAX_SKILL_PACKS = 2         # hard cap: packs injected per task
-MAX_SKILL_TOTAL = 3600      # hard cap: total injected chars (~2K tokens)
+# One slot is reserved for the always-on vendor-hub pack, leaving two slots
+# for task-matched playbooks so existing behavior is preserved.
+MAX_SKILL_PACKS = 3         # hard cap: packs injected per task
+MAX_SKILL_TOTAL = 4500      # hard cap: total injected chars (~2.5K tokens)
                             # 14B/8192 ctx budget â€” the 17K/14K values
                             # overflowed the local brain (8252 > 8192)
 

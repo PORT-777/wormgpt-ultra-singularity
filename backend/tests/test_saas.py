@@ -19,6 +19,13 @@ from saas import auth, db, payments, plans
 client = TestClient(app)
 
 
+@pytest.fixture(autouse=True)
+def _schema():
+    """TestClient does not run lifespan, so create the tables explicitly."""
+    db.init()
+    plans.seed()
+
+
 def _payloads():
     tag = uuid.uuid4().hex[:8]
     return {"email": f"u_{tag}@example.com", "password": "StrongPass12345", "username": f"u_{tag}"}
@@ -106,15 +113,17 @@ def test_paymob_hmac_and_webhook_idempotency(monkeypatch):
     uid = client.get("/api/saas/me", headers={"Authorization": f"Bearer {token}"}).json()["user"]["id"]
     c = db.conn()
     pid = "pay-test-" + uuid.uuid4().hex[:8]
+    order_ref = str(int(uuid.uuid4().int % 900000000) + 100000000)
     c.execute("INSERT INTO saas_payments(id,user_id,plan_id,provider,provider_ref,amount,currency,status,event,payload,created) VALUES(?,?,?,?,?,?,?,?,?,?,?)",
-              (pid, uid, "pro", "paymob", "777", 19.0, "EGP", "pending", "checkout_created", db.jdump({"period": "monthly"}), db.now()))
+              (pid, uid, "pro", "paymob", order_ref, 19.0, "EGP", "pending", "checkout_created", db.jdump({"period": "monthly"}), db.now()))
     c.commit()
     data = {
         "amount_cents": 1900, "created_at": "2026-01-01T00:00:00", "currency": "EGP",
-        "error_occured": False, "has_parent_transaction": False, "id": 999,
+        "error_occured": False, "has_parent_transaction": False,
+        "id": int(uuid.uuid4().int % 900000000) + 100000000,
         "integration_id": 123, "is_3d_secure": False, "is_auth": False, "is_capture": False,
         "is_refunded": False, "is_standalone_payment": True, "is_voided": False,
-        "order": {"id": 777, "merchant_order_id": pid}, "owner": 1, "pending": False,
+        "order": {"id": int(order_ref), "merchant_order_id": pid}, "owner": 1, "pending": False,
         "source_data": {"pan": "2346", "sub_type": "MasterCard", "type": "card"}, "success": True,
     }
     source = "".join(str(payments._dig(data, k)) for k in payments.HMAC_KEYS)
