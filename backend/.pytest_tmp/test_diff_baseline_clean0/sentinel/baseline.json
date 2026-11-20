@@ -1,0 +1,1 @@
+{"target": "app.exe", "sections_detail": [{"name": ".text", "virtual_size": 512, "virtual_address": 4096, "raw_size": 512, "pointer_to_raw": 512, "characteristics": 1610612768, "writable": false, "executable": true, "readable": true, "sha256": "46d40992a92ecb41"}]}

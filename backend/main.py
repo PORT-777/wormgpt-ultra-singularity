@@ -33,6 +33,7 @@ except Exception:  # dotenv is optional; env vars can be supplied by the shell
     pass
 
 from backend.api.chat import router as chat_router  # noqa: E402
+from backend.api.computer import router as computer_router  # noqa: E402
 from backend.api.plugins import router as plugins_router  # noqa: E402
 from backend.connect import router as connect_router  # noqa: E402
 from backend.api.intelligence import router as intelligence_router  # noqa: E402
@@ -60,6 +61,16 @@ async def lifespan(app: FastAPI):
             logger.info("loaded %d encrypted OAuth credentials", loaded)
     except Exception as exc:
         logger.warning("encrypted secret store unavailable: %s", exc)
+    try:
+        from computer import store as computer_store
+        from computer.manager import get_manager
+
+        computer_store.init_tables()
+        removed = get_manager().sweep_temporary()
+        if removed:
+            logger.info("cleaned %d expired temporary computers", removed)
+    except Exception as exc:
+        logger.warning("AI Computer subsystem init failed: %s", exc)
     logger.info("booting plugin subsystem")
     await registry_instance.discover_plugins()
     reports = await registry_instance.validate_all_plugins()
@@ -115,6 +126,7 @@ def mount_router(target: FastAPI, router, prefix: str = "") -> None:
 
 
 # --- API routers -------------------------------------------------------
+mount_router(app, computer_router)  # /api/computer/*
 mount_router(app, intelligence_router)  # /api/intelligence/*
 mount_router(app, system_router)  # /api/status, /api/history, /api/runtime, ...
 mount_router(app, connect_router)  # /api/connect/* one-click linking

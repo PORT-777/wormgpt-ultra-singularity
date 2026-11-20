@@ -1,0 +1,49 @@
+{
+  "version": 2,
+  "connections": {
+    "u1::github": {
+      "user_id": "u1",
+      "plugin_id": "github",
+      "provider_group": "github",
+      "token_type": "bearer",
+      "scopes": [
+        "repo"
+      ],
+      "expires_at": 1795200209.7155771,
+      "account_id": "42",
+      "account_name": "octocat",
+      "account_email": "octo@example.com",
+      "workspace_name": null,
+      "status": "connected",
+      "last_error": null,
+      "created_at": "2026-11-20T17:43:29.714396+00:00",
+      "updated_at": "2026-11-20T17:43:29.715588+00:00",
+      "last_refreshed_at": "2026-11-20T17:43:29Z",
+      "secrets": "Z0FBQUFBQnJBSWJCdE40bDZEdkdxOHNHUW44a0h0LTRlY2tmbWtOUnlGaVhfaWZlMDhvMTlzM3JidmRWWWZzVHB4S2VSUlB1cUlLTmJmdjNtcWFIWlU0YVF0TUxINXJPMFJnZG9GMkhpX2gwaV9ZVFlLRC1aU1ZPZlJiZDZ5MUVBSURwZDkwaHZ6emw5NDBsZ3dNVDVIXzZIWXhVTVlETmJhcUdzUWVNRVA3bWpHOGktQktLWHNMN0p2WUlNei1KYy0tcUVnT1ZXZkVC"
+    }
+  },
+  "history": [
+    {
+      "id": "12abd2405fcd613c",
+      "at": "2026-11-20T17:43:29.715000+00:00",
+      "timestamp": 1795196609.7150056,
+      "user_id": "u1",
+      "plugin_id": "github",
+      "action": "connect",
+      "status": "ok",
+      "detail": "scopes=repo,read:user,user:email",
+      "account": "octocat"
+    },
+    {
+      "id": "f7b16997e176ee81",
+      "at": "2026-11-20T17:43:29.716036+00:00",
+      "timestamp": 1795196609.7160423,
+      "user_id": "u1",
+      "plugin_id": "github",
+      "action": "refresh",
+      "status": "ok",
+      "detail": "Access token refreshed automatically.",
+      "account": "octocat"
+    }
+  ]
+}

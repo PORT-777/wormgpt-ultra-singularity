@@ -1,0 +1,13 @@
+{
+ "target": "D:\\xxxGPT\\WormGPT_Ultra_Singularity\\backend\\.pytest_tmp\\test_baseline_clean_verify0\\build",
+ "created": "t1.json",
+ "files": {
+  "game.bin": {
+   "size": 32,
+   "sha256": "e0e77a507412b120f6ede61f62295b1a7b2ff19d3dcc8f7253e51663470c888e",
+   "blocks": [
+    "e0e77a507412b120"
+   ]
+  }
+ }
+}

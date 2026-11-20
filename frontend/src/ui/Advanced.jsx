@@ -12,6 +12,7 @@ import TraceFeed from "../components/TraceFeed.jsx";
 import ConsensusPanel from "../components/ConsensusPanel.jsx";
 import WorkspacePanel from "../components/WorkspacePanel.jsx";
 import PluginsPanel from "../components/PluginsPanel.jsx";
+import ComputerPanel from "../components/ComputerPanel.jsx";
 import { cleanFileList, formatSize } from "./fileUtils.js";
 import { t } from "./i18n.js";
 
@@ -23,6 +24,7 @@ const NAV = () => [
   { id: "tools", icon: "shield", label: t("أدوات الأمان", "Security tools"), group: "advanced" },
   { id: "ops", icon: "graph", label: t("عمليات IOC", "IOC operations"), group: "advanced" },
   { id: "progress", icon: "trophy", label: t("التقدم والخبرة", "Progress & XP"), group: "advanced" },
+  { id: "computer", icon: "monitor", label: t("كمبيوتر الذكاء الاصطناعي", "AI Computer"), group: "advanced" },
   { id: "plugins", icon: "plug", label: t("الإضافات والتكاملات", "Plugins & integrations"), group: "advanced" },
   { id: "repos", icon: "gitBranch", label: t("المستودعات المدمجة", "Vendored repos"), group: "advanced" },
   { id: "mcp", icon: "plug", label: t("الإضافات (MCP)", "Extensions (MCP)"), group: "advanced" },
@@ -413,6 +415,7 @@ export default function Advanced({ view, setView, onClose, sessionId, notify, ch
             {view === "ops" && <OpsPanel notify={notify} sessionId={sessionId} />}
             {view === "progress" && <ProgressPanel notify={notify} onClose={() => setView("models")} />}
             {view === "plugins" && <PluginsPanel notify={notify} />}
+      {view === "computer" && <ComputerPanel notify={notify} />}
             {view === "mcp" && <McpView notify={notify} />}
       {view === "repos" && <VendorView notify={notify} />}
             {view === "export" && <ExportView sessionId={sessionId} notify={notify} />}

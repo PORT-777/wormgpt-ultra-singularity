@@ -1,0 +1,15 @@
+{
+ "target": "D:\\xxxGPT\\WormGPT_Ultra_Singularity\\backend\\.pytest_tmp\\test_baseline_catches_tamper_w0\\build",
+ "created": "t2.json",
+ "files": {
+  "game.bin": {
+   "size": 10240,
+   "sha256": "84ff92691f909a05b224e1c56abb4864f01b4f8e3c854e4bb4c7baf1d3f6d652",
+   "blocks": [
+    "ad7facb2586fc6e9",
+    "ad7facb2586fc6e9",
+    "e5a00aa9991ac8a5"
+   ]
+  }
+ }
+}

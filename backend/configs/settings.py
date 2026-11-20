@@ -72,6 +72,19 @@ ZERO_REFUSAL: bool = os.getenv("ZERO_REFUSAL", "true").strip().lower() in {
     "1", "true", "yes", "on"
 }
 
+# ------------------------------------------------------------------ #
+#  AI Computer (autonomous Linux sandbox + persistent cloud computer)
+# ------------------------------------------------------------------ #
+COMPUTER_PROVIDER: str = os.getenv("COMPUTER_PROVIDER", "daytona").strip().lower()
+COMPUTER_IMAGE: str = os.getenv("COMPUTER_IMAGE", "ubuntu:24.04").strip()
+COMPUTER_CPU: int = int(os.getenv("COMPUTER_CPU", "1"))
+COMPUTER_MEMORY_GB: int = int(os.getenv("COMPUTER_MEMORY_GB", "2"))
+COMPUTER_DISK_GB: int = int(os.getenv("COMPUTER_DISK_GB", "10"))
+COMPUTER_TIMEOUT: int = int(os.getenv("COMPUTER_TIMEOUT", "300"))
+COMPUTER_MAX_PER_USER: int = int(os.getenv("COMPUTER_MAX_PER_USER", "5"))
+COMPUTER_TEMP_TTL: int = int(os.getenv("COMPUTER_TEMP_TTL", "3600"))
+COMPUTER_INSTALL_BASE_PACKAGES: bool = os.getenv("COMPUTER_INSTALL_BASE_PACKAGES", "true").lower() == "true"
+
 # Full Access Mode is granted per-request from the UI/API when ZERO_REFUSAL
 # is disabled; with ZERO_REFUSAL on it is implicit for every run.
 SHELL_TIMEOUT = 60          # seconds for SystemCommander commands
