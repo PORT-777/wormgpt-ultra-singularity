@@ -48,3 +48,6 @@ backend/migrations/*.bak
 
 # local object storage (user files never enter git)
 backend/data/storage/
+
+# pytest temporary workspaces (generated artifacts)
+backend/.pytest_tmp/
