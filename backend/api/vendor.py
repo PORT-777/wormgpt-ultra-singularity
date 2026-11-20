@@ -55,6 +55,36 @@ REPOS = [
         "url": "",
         "role": "real local reference files: URL policy, secret store, tool pattern, defaults",
     },
+    {
+        "id": "deepseek-harness", "dir": "deepseek-harness",
+        "name": "DeepSeek Harness",
+        "url": "https://github.com/deepseek-ai/deepseek-harness",
+        "role": "DeepSeek agent harness, benchmarks and eval skills",
+    },
+    {
+        "id": "career-ops", "dir": "career-ops",
+        "name": "Career Ops",
+        "url": "https://github.com/career-ops-hq/career-ops",
+        "role": "local AI job search, CV tailoring and application tracking",
+    },
+    {
+        "id": "ohmyzsh", "dir": "ohmyzsh",
+        "name": "Oh My Zsh",
+        "url": "https://github.com/ohmyzsh/ohmyzsh",
+        "role": "shell framework: plugins, themes, lib helpers and tools",
+    },
+    {
+        "id": "ruflo", "dir": "ruflo",
+        "name": "Ruflo",
+        "url": "https://github.com/ruvnet/ruflo",
+        "role": "agent orchestration, swarms, SPARC and 400+ skills",
+    },
+    {
+        "id": "agentic-skills", "dir": "agentic-awesome-skills",
+        "name": "Agentic Awesome Skills",
+        "url": "https://github.com/sickn33/agentic-awesome-skills",
+        "role": "large curated catalog of agent skill playbooks",
+    },
 ]
 
 
@@ -108,7 +138,7 @@ async def list_repos() -> Dict[str, Any]:
         return _CACHE["data"]
     items: List[Dict[str, Any]] = []
     for meta in REPOS:
-        path = _VENDOR_DIR / meta["id"]
+        path = _VENDOR_DIR / meta.get("dir", meta["id"])
         exists = path.is_dir()
         files = _file_count(path) if exists else 0
         items.append({
@@ -132,3 +162,45 @@ async def repo_detail(repo_id: str) -> Dict[str, Any]:
         if item["id"] == repo_id:
             return item
     raise HTTPException(404, f"unknown vendored repo: {repo_id}")
+
+
+@router.get("/skills/search")
+async def skills_search(q: str = "", repo: str = "", limit: int = 10):
+    import vendor_hub
+
+    try:
+        return {"skills": vendor_hub.search(q, repo, limit)}
+    except vendor_hub.VendorError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+
+@router.get("/skill")
+async def skill_read(id: str = ""):
+    import vendor_hub
+
+    try:
+        return vendor_hub.read_skill(id)
+    except vendor_hub.VendorError as exc:
+        raise HTTPException(404, str(exc)) from exc
+
+
+@router.get("/tools")
+async def vendor_tools():
+    import vendor_hub
+
+    return {"plugins": vendor_hub.plugin_tools(),
+            "mcp_tools": [
+                "vendor_repos_list", "vendor_info", "vendor_skills_search",
+                "vendor_skill_read", "vendor_file_list", "vendor_file_read",
+                "vendor_repo_search", "vendor_plugins",
+            ]}
+
+
+@router.get("/{repo_id}/files")
+async def repo_files(repo_id: str, path: str = "", limit: int = 100):
+    import vendor_hub
+
+    try:
+        return {"files": vendor_hub.list_files(repo_id, path, limit)}
+    except vendor_hub.VendorError as exc:
+        raise HTTPException(400, str(exc)) from exc

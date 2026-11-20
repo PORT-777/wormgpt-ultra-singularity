@@ -20,9 +20,9 @@ from .base import Tool, full_access
 class McpTool(Tool):
     name = "McpTool"
     description = (
-        "Call a configured MCP server tool (opt-in). Requires MCP_ENABLED=true "
-        "and Full Access for this request. Use only for explicitly configured "
-        "servers. Input: {'server':'name','tool':'tool_name','arguments':{...}}"
+        "Call a configured MCP server tool. Available on every message when "
+        "MCP_ENABLED=true; wormgpt-local exposes all vendor_* tools. Full Access "
+        "is required for execution. Input: {'server':'name','tool':'tool_name','arguments':{...}}"
     )
     example = {"server": "filesystem", "tool": "list_directory", "arguments": {"path": "."}}
 

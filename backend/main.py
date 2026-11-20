@@ -73,6 +73,13 @@ async def lifespan(app: FastAPI):
     except Exception as exc:
         logger.warning("persistence init failed: %s", exc)
     try:
+        import vendor_hub
+
+        vendor_hub.ensure_index()
+        logger.info("vendor hub ready: %d repositories indexed", len(vendor_hub.list_repos()))
+    except Exception as exc:
+        logger.warning("vendor hub init failed: %s", exc)
+    try:
         from saas import db as saas_db
         from saas import plans as saas_plans
 

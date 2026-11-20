@@ -28,6 +28,21 @@ multiplayer games, anti-cheat evasion, or DRM/licensing circumvention.
 
 ---
 
+## Vendor hub (repos → tools / plugins / MCP / skills)
+
+All vendored repositories are indexed by `backend/vendor_hub.py` and exposed
+automatically on every message through:
+
+- `VendorTool` (agent tool, actions: `repos`, `info`, `skills`, `skill`, `search`, `files`, `read`, `plugins`)
+- MCP tools `vendor_*` on the `wormgpt-local` server
+- plugins `vendor_<repo_id>` in `backend/plugins_catalog/vendor/`
+- the always-on skill pack `backend/skills_packs/vendor-hub.md`
+
+Repos: AutoGPT, Claude Skills, OpenHands, ECC, Hermes Agent, Lunar Source,
+DeepSeek Harness, Career Ops, Oh My Zsh, Ruflo, Agentic Awesome Skills.
+Run `git submodule update --init --recursive` after cloning to fetch them.
+All access is read-only and confined to `vendor/`.
+
 ## Persistent infrastructure (Supabase / Render)
 
 All persistent records use `backend/database.py`: SQLite locally, Supabase

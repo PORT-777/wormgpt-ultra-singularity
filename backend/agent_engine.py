@@ -1893,15 +1893,17 @@ class AgentEngine:
 
                     mcp_note = (
 
-                        "\n\n## MCP (opt-in, guarded)\n"
+                        "\n\n## MCP + vendor tools (auto-available)\n"
 
                         f"MCP enabled={bool(getattr(config, 'MCP_ENABLED', False))}, "
 
                         f"Full Access={full_access()}. "
 
-                        "McpTool can call configured MCP server tools only when both are true; "
+                        "VendorTool is always callable and VendorTool action 'skills' finds "
+                        "reusable playbooks from all 11 vendored repos. "
+                        "McpTool can call the configured wormgpt-local vendor_* tools; "
 
-                        "otherwise it will refuse. Use only explicitly configured servers/tools. "
+                        "when MCP is enabled and Full Access is granted. "
 
                         "Start with discovery/test outside the agent loop when unsure."
 

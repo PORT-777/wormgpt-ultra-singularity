@@ -15,6 +15,7 @@ if str(_BACKEND_DIR) not in sys.path:
     sys.path.insert(0, str(_BACKEND_DIR))
 
 from plugins_system.registry import registry_instance  # noqa: E402
+import vendor_hub  # noqa: E402
 
 TOOLS = [
     {
@@ -32,6 +33,85 @@ TOOLS = [
             },
             "additionalProperties": False,
         },
+    },
+    {
+        "name": "vendor_repos_list",
+        "description": "List all vendored repositories with their skill counts and roles.",
+        "inputSchema": {"type": "object", "properties": {}, "additionalProperties": False},
+    },
+    {
+        "name": "vendor_info",
+        "description": "Show metadata for one vendored repository.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {"repo": {"type": "string"}},
+            "required": ["repo"], "additionalProperties": False,
+        },
+    },
+    {
+        "name": "vendor_skills_search",
+        "description": "Search SKILL.md playbooks across all vendored repositories.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "query": {"type": "string"},
+                "repo": {"type": "string", "description": "optional repo id"},
+                "limit": {"type": "integer"},
+            },
+            "required": ["query"], "additionalProperties": False,
+        },
+    },
+    {
+        "name": "vendor_skill_read",
+        "description": "Read one indexed SKILL.md by its id (repo:relative/path).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {"skill_id": {"type": "string"}},
+            "required": ["skill_id"], "additionalProperties": False,
+        },
+    },
+    {
+        "name": "vendor_file_list",
+        "description": "List files inside a vendored repository (read-only).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "repo": {"type": "string"},
+                "path": {"type": "string"},
+                "limit": {"type": "integer"},
+            },
+            "required": ["repo"], "additionalProperties": False,
+        },
+    },
+    {
+        "name": "vendor_file_read",
+        "description": "Read a text file inside a vendored repository (read-only, size limited).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "repo": {"type": "string"},
+                "path": {"type": "string"},
+            },
+            "required": ["repo", "path"], "additionalProperties": False,
+        },
+    },
+    {
+        "name": "vendor_repo_search",
+        "description": "Search source text inside one vendored repository.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "repo": {"type": "string"},
+                "query": {"type": "string"},
+                "limit": {"type": "integer"},
+            },
+            "required": ["repo", "query"], "additionalProperties": False,
+        },
+    },
+    {
+        "name": "vendor_plugins",
+        "description": "List the vendor plugin catalog and the tools each plugin exposes.",
+        "inputSchema": {"type": "object", "properties": {}, "additionalProperties": False},
     },
 ]
 
@@ -67,6 +147,29 @@ async def _call(name: str, arguments: dict):
             }
             for m in manifests
         ])
+    if name == "vendor_repos_list":
+        return _text(vendor_hub.list_repos())
+    if name == "vendor_info":
+        return _text(vendor_hub.repo_info(arguments.get("repo", "")))
+    if name == "vendor_skills_search":
+        return _text(vendor_hub.search(
+            arguments.get("query", ""), arguments.get("repo", ""),
+            int(arguments.get("limit") or 10)))
+    if name == "vendor_skill_read":
+        return _text(vendor_hub.read_skill(arguments.get("skill_id", "")))
+    if name == "vendor_file_list":
+        return _text(vendor_hub.list_files(
+            arguments.get("repo", ""), arguments.get("path", ""),
+            int(arguments.get("limit") or 100)))
+    if name == "vendor_file_read":
+        return _text(vendor_hub.read_file(
+            arguments.get("repo", ""), arguments.get("path", "")))
+    if name == "vendor_repo_search":
+        return _text(vendor_hub.repo_search(
+            arguments.get("repo", ""), arguments.get("query", ""),
+            int(arguments.get("limit") or 20)))
+    if name == "vendor_plugins":
+        return _text(vendor_hub.plugin_tools())
     raise ValueError(f"unknown tool: {name}")
 
 

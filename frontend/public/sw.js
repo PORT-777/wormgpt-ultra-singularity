@@ -1,14 +1,20 @@
-/* PORT 777 service worker — offline shell + safe GET cache. */
-const CACHE = "port777-shell-v1";
+/* PORT 777 service worker — offline shell + safe asset cache only. */
+const CACHE = "port777-shell-v2";
 const SHELL = ["/", "/index.html", "/manifest.webmanifest", "/icon.svg"];
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(SHELL)).then(() => self.skipWaiting()));
+  event.waitUntil(
+    caches.open(CACHE)
+      .then((cache) => cache.addAll(SHELL).catch(() => undefined))
+      .then(() => self.skipWaiting())
+  );
 });
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))).then(() => self.clients.claim())
+    caches.keys()
+      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
+      .then(() => self.clients.claim())
   );
 });
 
@@ -20,30 +26,40 @@ self.addEventListener("fetch", (event) => {
 
   if (req.mode === "navigate") {
     event.respondWith(
-      fetch(req).then((res) => {
-        const copy = res.clone();
-        caches.open(CACHE).then((c) => c.put("/index.html", copy));
-        return res;
-      }).catch(() => caches.match("/index.html"))
+      fetch(req)
+        .then((res) => {
+          if (res.ok) {
+            const copy = res.clone();
+            caches.open(CACHE).then((c) => c.put("/index.html", copy));
+          }
+          return res;
+        })
+        .catch(() => caches.match("/index.html").then((hit) => hit || Response.error()))
     );
     return;
   }
 
-  const isAsset = url.pathname.startsWith("/assets/") || ["/icon.svg", "/manifest.webmanifest"].includes(url.pathname);
-  const isSafeApi = url.pathname.startsWith("/api/") && !url.pathname.startsWith("/api/chat");
-
-  if (!isAsset && !isSafeApi) return;
+  // Never intercept API requests. They are authenticated, session-scoped and
+  // must surface real network errors to the app instead of a rejected SW fetch.
+  const isAsset =
+    url.pathname.startsWith("/assets/") ||
+    ["/icon.svg", "/manifest.webmanifest"].includes(url.pathname);
+  if (!isAsset) return;
 
   event.respondWith(
     caches.match(req).then((cached) => {
       if (cached) return cached;
-      return fetch(req).then((res) => {
-        if (res.ok) {
-          const copy = res.clone();
-          caches.open(CACHE).then((c) => c.put(req, copy));
-        }
-        return res;
-      });
+      return fetch(req)
+        .then((res) => {
+          if (res.ok) {
+            const copy = res.clone();
+            caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => undefined);
+          }
+          return res;
+        })
+        // A missing/offline server must not produce an unhandled promise
+        // rejection in sw.js — return a controlled response instead.
+        .catch(() => new Response("", { status: 503, statusText: "offline" }));
     })
   );
 });

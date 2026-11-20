@@ -1,0 +1,30 @@
+[submodule "vendor/autogpt"]
+	path = vendor/autogpt
+	url = https://github.com/significant-gravitas/autogpt.git
+[submodule "vendor/claude-skills"]
+	path = vendor/claude-skills
+	url = https://github.com/alirezarezvani/claude-skills.git
+[submodule "vendor/openhands"]
+	path = vendor/openhands
+	url = https://github.com/OpenHands/openhands.git
+[submodule "vendor/ECC"]
+	path = vendor/ECC
+	url = https://github.com/affaan-m/ECC.git
+[submodule "vendor/hermes-agent"]
+	path = vendor/hermes-agent
+	url = https://github.com/nousresearch/hermes-agent.git
+[submodule "vendor/deepseek-harness"]
+	path = vendor/deepseek-harness
+	url = https://github.com/deepseek-ai/deepseek-harness.git
+[submodule "vendor/career-ops"]
+	path = vendor/career-ops
+	url = https://github.com/career-ops-hq/career-ops.git
+[submodule "vendor/ohmyzsh"]
+	path = vendor/ohmyzsh
+	url = https://github.com/ohmyzsh/ohmyzsh.git
+[submodule "vendor/ruflo"]
+	path = vendor/ruflo
+	url = https://github.com/ruvnet/ruflo.git
+[submodule "vendor/agentic-awesome-skills"]
+	path = vendor/agentic-awesome-skills
+	url = https://github.com/sickn33/agentic-awesome-skills.git
