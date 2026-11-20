@@ -1,7 +1,7 @@
 // @ts-nocheck
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import Icon from "../components/Icon.jsx";
-import { t } from "./i18n.js";
+import { LANGUAGES, t } from "./i18n.js";
 
 function timeAgo(ts) {
   const ms = Number(ts) || 0;
@@ -52,7 +52,7 @@ export default function Sidebar({
   onToggleTheme,
   theme = "dark",
   lang = "ar",
-  onToggleLang,
+  onLang,
   onCollapse,
   userLabel = "Operator",
   disconnected = false,
@@ -213,11 +213,13 @@ export default function Sidebar({
           <span className="ico"><Icon name={theme === "light" ? "moon" : "sun"} size={16} /></span>
           {theme === "light" ? t("الوضع الداكن", "Dark mode") : t("الوضع الفاتح", "Light mode")}
         </button>
-        {onToggleLang && (
-          <button type="button" className="side-item" onClick={() => onToggleLang?.()}>
+        {onLang && (
+          <label className="side-item lang-select" title={t("اللغة", "Language")}>
             <span className="ico"><Icon name="globe" size={16} /></span>
-            {lang === "ar" ? "English" : "العربية"}
-          </button>
+            <select value={lang} onChange={(e) => onLang?.(e.target.value)} aria-label={t("اللغة", "Language")}>
+              {LANGUAGES.map((l) => <option key={l.id} value={l.id}>{l.label}</option>)}
+            </select>
+          </label>
         )}
         <button type="button" className="side-item" onClick={() => onSettings?.()}>
           <span className="ico"><Icon name="settings" size={16} /></span>

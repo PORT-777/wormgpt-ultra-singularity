@@ -1,5 +1,6 @@
 import json
 import logging
+import re
 from typing import Any, AsyncGenerator, Dict, List, Optional
 
 from fastapi import APIRouter, Header, HTTPException, Request
@@ -10,6 +11,13 @@ from backend.plugins.runtime import PluginExecutionError
 
 logger = logging.getLogger("ChatAPI")
 router = APIRouter()
+
+
+def language_instruction(text: str) -> str:
+    """Force the model to mirror the language of the operator's latest message."""
+    if re.search(r"[\u0600-\u06FF]", str(text or "")):
+        return "Reply entirely in Arabic (العربية), matching the user's language. Do not switch to English."
+    return "Reply in the same language as the user's latest message. Match it exactly; do not switch languages."
 
 
 # --------------------------------------------------------------------- schemas
@@ -90,7 +98,9 @@ async def stream_chat(request: ChatRequest, x_user_id: Optional[str] = Header(No
         try:
             async for chunk in ai_client.stream(
                 messages=[m.model_dump() for m in request.messages],
-                system=_system_prompt(user_id, len(all_tools)),
+                system=_system_prompt(user_id, len(all_tools)) + "\n\n" + language_instruction(
+                    next((m.content for m in reversed(request.messages) if m.role == "user"), "")
+                ),
                 tools=all_tools,
             ):
                 if chunk.get("type") == "tool_use":
@@ -221,6 +231,7 @@ async def ui_chat(request: Request) -> Any:
             "CodeIntelligence tasks target this project unless the user says otherwise.\n\n"
             + (system_prompt or "")
         )
+    system_prompt = (system_prompt or "") + "\n\n" + language_instruction(user)
 
     model_name = str(req.get("model") or "auto")
     stream = bool(req.get("stream", True))

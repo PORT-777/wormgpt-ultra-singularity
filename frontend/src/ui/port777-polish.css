@@ -112,6 +112,14 @@
   opacity: 1;
 }
 
+/* Language selector */
+.side-item.lang-select { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+.side-item.lang-select select {
+  flex: 1; min-width: 0; background: transparent; color: inherit; border: 0; outline: 0;
+  font: inherit; font-size: 12px; cursor: pointer;
+}
+.side-item.lang-select select option { background: var(--panel); color: var(--text); }
+
 /* ---- Strong interactive layer: icons, glow, motion ---- */
 @keyframes p7-orbit {
   0% { transform: rotate(0deg) scale(1); }

@@ -17,15 +17,9 @@ import { t } from "./i18n.js";
 
 const NAV = () => [
   { id: "models", icon: "layers", label: t("الموديلات والمزودون", "Models & providers"), group: "ai" },
-  { id: "workspace", icon: "folder", label: t("مدير المساحة", "Workspace Manager"), group: "workspace" },
   { id: "consensus", icon: "layers", label: t("توافق الموديلات", "Model Consensus"), group: "ai" },
   { id: "agents", icon: "bot", label: t("وكلاء الذكاء", "AI Agents"), group: "ai" },
   { id: "activity", icon: "activity", label: t("النشاط والتتبع", "Activity & traces"), group: "ai" },
-  { id: "sandbox", icon: "terminal", label: t("الصندوق المعزول", "Sandbox"), group: "workspace" },
-  { id: "exec", icon: "code", label: t("بيئة التنفيذ", "Execution"), group: "workspace" },
-  { id: "files", icon: "folderOpen", label: t("الملفات", "Files"), group: "workspace" },
-  { id: "memory", icon: "brain", label: t("الذاكرة", "Memory"), group: "workspace" },
-  { id: "prompts", icon: "bookmark", label: t("البرومبتات المحفوظة", "Saved prompts"), group: "workspace" },
   { id: "tools", icon: "shield", label: t("أدوات الأمان", "Security tools"), group: "advanced" },
   { id: "ops", icon: "graph", label: t("عمليات IOC", "IOC operations"), group: "advanced" },
   { id: "progress", icon: "trophy", label: t("التقدم والخبرة", "Progress & XP"), group: "advanced" },
@@ -37,7 +31,6 @@ const NAV = () => [
 
 const GROUPS = () => [
   ["ai", t("الذكاء", "AI")],
-  ["workspace", t("مساحة العمل", "Workspace")],
   ["advanced", t("متقدم", "Advanced")],
 ];
 

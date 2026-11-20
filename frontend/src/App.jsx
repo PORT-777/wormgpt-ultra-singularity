@@ -27,7 +27,7 @@ import Message from "./ui/Message.jsx";
 import ContextPanel from "./ui/ContextPanel.jsx";
 const Advanced = React.lazy(() => import("./ui/Advanced.jsx"));
 import ReasoningDashboard from "./components/ReasoningDashboard.jsx";
-import { setUiLang, t } from "./ui/i18n.js";
+import { LANGUAGES, setUiLang, t } from "./ui/i18n.js";
 
 const ROUTES = ["auto"];
 const TABS = [
@@ -189,7 +189,7 @@ export default function App(){
   const [readProgress,setReadProgress]=useState(0);
   const [sidebarCollapsed,setSidebarCollapsed]=useState(()=>!!initPrefs.sidebarCollapsed);
   const [theme,setTheme]=useState(()=>{ const t=initPrefs.theme; if(t==="light"||t==="dark") return t; return window.matchMedia?.("(prefers-color-scheme: light)")?.matches ? "light" : "dark"; });
-  const [lang,setLang]=useState(()=>initPrefs.lang==="en"?"en":"ar");
+  const [lang,setLang]=useState(()=>LANGUAGES.some(l=>l.id===initPrefs.lang)?initPrefs.lang:"ar");
   const [advOpen,setAdvOpen]=useState(false);
   const [advView,setAdvView]=useState("models");
   const [ctxOpen,setCtxOpen]=useState(()=>initPrefs.contextOpen===true);
@@ -779,7 +779,7 @@ export default function App(){
         onToggleTheme={toggleTheme}
         theme={theme}
         lang={lang}
-        onToggleLang={() => setLang(l => (l === "ar" ? "en" : "ar"))}
+        onLang={(v) => setLang(v)}
         onCollapse={() => setSidebarCollapsed(true)}
         disconnected={connection.state === "disconnected"}
       />
