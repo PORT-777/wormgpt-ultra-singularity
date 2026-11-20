@@ -1,0 +1,194 @@
+﻿/* ============================================================
+   🔥😈 PORT 777 EVIL ☠️🔥👹 â€” Gateway Panel
+   Ø§Ù„Ù…Ø­ÙˆØ±: Ù…Ø²ÙˆØ¯ÙŠÙ† + API Keys Ù„Ø£ÙŠ Ù…ÙˆØ¯ÙŠÙ„ + Ø§Ù„ØªÙØ¹ÙŠÙ„ + Ø§Ù„Ø­Ù…Ø§ÙŠØ© + Ù…Ø¬Ø§Ù†ÙŠ ÙÙ‚Ø·
+   (Ù†Ø³Ø®Ø© ÙƒØ§Ù…Ù„Ø© Ø¬Ø§Ù‡Ø²Ø© Ù„Ù„ØµÙ‚ â€” ØªØ¹ØªÙ…Ø¯ Ø¹Ù„Ù‰ gatewayClient.js Ùˆ gateway.css)
+   ============================================================ */
+import React, { useCallback, useEffect, useState } from 'react';
+import { gatewayApi, maskKey } from './gatewayClient.js';
+
+const EMPTY_FORM = { name: '', url: '', key: '', tier: 'free' };
+
+export default function GatewayPanel({ onToast }) {
+  const [settings, setSettings] = useState({ activation: true, protection: true, freeOnly: true });
+  const [providers, setProviders] = useState([]);
+  const [form, setForm] = useState(EMPTY_FORM);
+  const [testing, setTesting] = useState(null); // id Ø§Ù„Ù…Ø²ÙˆØ¯ Ø§Ù„Ù„ÙŠ Ø¨ÙŠØªÙØ­Øµ Ø¯Ù„ÙˆÙ‚ØªÙŠ
+  const [saving, setSaving] = useState(false);
+
+  const toast = (msg, kind) => onToast && onToast(msg, kind);
+
+  const refresh = useCallback(async () => {
+    try {
+      const [s, p] = await Promise.all([gatewayApi.getSettings(), gatewayApi.listProviders()]);
+      setSettings(s);
+      setProviders(p.providers || []);
+    } catch (e) {
+      toast('ØªØ¹Ø°Ø± ØªØ­Ù…ÙŠÙ„ Ø§Ù„Ù…Ø­ÙˆØ±: ' + e.message, 'warn');
+    }
+  }, []); // eslint-disable-line
+
+  useEffect(() => { refresh(); }, [refresh]);
+
+  /* ---------- Ø§Ù„Ø¥Ø¹Ø¯Ø§Ø¯Ø§Øª ---------- */
+  async function flipSetting(k) {
+    const next = { ...settings, [k]: !settings[k] };
+    setSettings(next); // ØªØ­Ø¯ÙŠØ« Ù…ØªÙØ§Ø¦Ù„
+    try { await gatewayApi.setSettings({ [k]: next[k] }); } catch (e) {
+      setSettings(settings); // Ø±Ø¬Ù‘Ø¹ Ø§Ù„Ù‚Ø¯ÙŠÙ… Ù„Ùˆ ÙØ´Ù„
+      toast('ÙØ´Ù„ ØªØºÙŠÙŠØ± Ø§Ù„Ø¥Ø¹Ø¯Ø§Ø¯: ' + e.message, 'warn');
+    }
+  }
+
+  /* ---------- Ø§Ù„Ù…Ø²ÙˆØ¯ÙˆÙ† ---------- */
+  async function addProvider(e) {
+    e.preventDefault();
+    if (!form.name || !form.url || !form.key) return toast('Ø§ÙƒØªØ¨ Ø§Ù„Ø§Ø³Ù… ÙˆØ§Ù„Ù€ Base URL ÙˆØ§Ù„Ù…ÙØªØ§Ø­', 'warn');
+    if (!/^https?:\/\//.test(form.url)) return toast('Ø§Ù„Ù€ Base URL Ù„Ø§Ø²Ù… ÙŠØ¨Ø¯Ø£ Ø¨Ù€ http(s)://', 'warn');
+    setSaving(true);
+    try {
+      const r = await gatewayApi.addProvider(form);
+      toast(`ðŸŽ‰ Ø§ØªÙˆØµÙ„ Ø¨Ù€ ${form.name} â€” ${r.modelsCount ?? '?'} Ù…ÙˆØ¯ÙŠÙ„ Ø§ØªÙƒØªØ´ÙÙˆØ§`, 'ok');
+      setForm(EMPTY_FORM);
+      refresh();
+    } catch (err) { toast('ÙØ´Ù„ Ø§Ù„ØªÙˆØµÙŠÙ„: ' + err.message, 'warn'); }
+    finally { setSaving(false); }
+  }
+
+  async function syncModels(id) {
+    setTesting(id);
+    try {
+      const r = await gatewayApi.syncProviderModels(id);
+      toast(`âœ… ØªÙ… Ù…Ø²Ø§Ù…Ù†Ø© ${r.modelsCount||0} Ù…ÙˆØ¯ÙŠÙ„`, 'ok');
+      refresh();
+    } catch (e) { toast(`ÙØ´Ù„Øª Ù…Ø²Ø§Ù…Ù†Ø© Ø§Ù„Ù…ÙˆØ¯ÙŠÙ„Ø§Øª: ${e.message}`, 'warn'); }
+    finally { setTesting(null); }
+  }
+
+  async function testProvider(id) {
+    setTesting(id);
+    try {
+      const r = await gatewayApi.testProvider(id);
+      toast(`âœ… ${r.name} Ù…ØªØµÙ„ â€” ${r.modelsCount} Ù…ÙˆØ¯ÙŠÙ„`, 'ok');
+      refresh();
+    } catch (e) { toast(`â›” ÙØ´Ù„ Ø§Ù„Ø§ØªØµØ§Ù„: ${e.message}`, 'warn'); }
+    finally { setTesting(null); }
+  }
+
+  async function toggleProvider(p) {
+    try { await gatewayApi.updateProvider(p.id, { enabled: !p.enabled }); refresh(); }
+    catch (e) { toast('ÙØ´Ù„ Ø§Ù„ØªØ¨Ø¯ÙŠÙ„: ' + e.message, 'warn'); }
+  }
+
+  async function deleteProvider(p) {
+    if (!window.confirm(`ØªØ­Ø°Ù ${p.name} ÙˆÙ…ÙØªØ§Ø­Ù‡ Ù†Ù‡Ø§Ø¦ÙŠØ§Ù‹ØŸ`)) return;
+    try { await gatewayApi.deleteProvider(p.id); toast('ØªÙ… Ø§Ù„Ø­Ø°Ù ðŸ”¥', 'ok'); refresh(); }
+    catch (e) { toast('ÙØ´Ù„ Ø§Ù„Ø­Ø°Ù: ' + e.message, 'warn'); }
+  }
+
+  const enabled = providers.filter((p) => p.enabled && p.status === 'ok');
+  const visibleProviders = providers.filter((p) => p.enabled || p.status === 'ok' || p.modelsCount > 0);
+  const freeEnabled = enabled.filter((p) => p.tier === 'free').length;
+
+  return (
+    <div className="gw-wrap">
+      {/* ====== Ù…ÙØ§ØªÙŠØ­ Ø§Ù„Ø­Ø§Ù„Ø© Ø§Ù„Ø«Ù„Ø§Ø«Ø© ====== */}
+      <div className="gw-toggles">
+        <ToggleCard
+          on={settings.activation} onFlip={() => flipSetting('activation')}
+          icon="âš¡" title="ØªÙØ¹ÙŠÙ„ Ø§Ù„Ù…Ø­ÙˆØ±" badge={settings.activation ? 'Active' : 'Closed'}
+          desc="Ø§Ù„Ù…ÙØªØ§Ø­ Ø§Ù„Ø±Ø¦ÙŠØ³ÙŠ. ON = Ø§Ù„Ø´Ø§Øª ÙˆØ§Ù„Ù…Ù‡Ø§Ù… ØªÙ…Ø± Ø¹Ù„Ù‰ Ù…ÙˆØ¯ÙŠÙ„Ø§ØªÙƒ. OFF = fail-closed: ÙƒÙ„ Ø§Ù„Ø·Ù„Ø¨Ø§Øª ØªØ±Ø¬Ø¹ Ù„Ù„Ù…ÙˆØ¯ÙŠÙ„ Ø§Ù„Ù…Ø­Ù„ÙŠ ÙˆÙ…ÙÙŠØ´ Ø£ÙŠ Ø·Ù„Ø¨ Ø®Ø§Ø±Ø¬ÙŠ."
+          onText="Ù…ÙÙØ¹Ù‘Ù„ â€” Ø§Ù„ØªÙˆØ¬ÙŠÙ‡ Ø¹Ø¨Ø± Ù…Ø²ÙˆØ¯ÙŠÙ†Ùƒ Ø´ØºØ§Ù„" offText="Ù…ØªÙ‚ÙÙˆÙ„ â€” fail-closed Ø¹Ù„Ù‰ Ø§Ù„Ù…ÙˆØ¯ÙŠÙ„ Ø§Ù„Ù…Ø­Ù„ÙŠ"
+        />
+        <ToggleCard
+          on={settings.protection} onFlip={() => flipSetting('protection')}
+          icon="ðŸ›¡ï¸" title="ÙˆØ¶Ø¹ Ø§Ù„Ø­Ù…Ø§ÙŠØ©" badge={settings.protection ? 'Guarded' : 'Off'}
+          desc="ÙÙ„ØªØ± prompt-injection Ø¹Ù„Ù‰ ÙƒÙ„ Ù…Ø³Ø§Ø± + Ø¥Ø®ÙØ§Ø¡ Ø£ÙŠ Ù…ÙØªØ§Ø­ ÙŠØªØ³Ø±Ø¨ ÙÙŠ Ø§Ù„Ù†ØµÙˆØµ (Ø§ØªØ¬Ø§Ù‡ÙŠÙ†) + ØªØªØ¨Ø¹ Ù„ÙƒÙ„ Ù…ÙØªØ§Ø­. Ø§Ù„Ø§Ø®ØªØ±Ø§Ù‚ Ø¨ÙŠØªÙ…Ù†Ø¹ fail-closed."
+          onText="Ø§Ù„Ø­Ù…Ø§ÙŠØ© Ø´ØºØ§Ù„Ø© Ø¹Ù„Ù‰ ÙƒÙ„ Ø§Ù„Ù…Ø³Ø§Ø±Ø§Øª" offText="âš ï¸ Ù…Ù† ØºÙŠØ± ÙÙ„ØªØ± injection ÙˆÙ„Ø§ Ø¥Ø®ÙØ§Ø¡ Ù…ÙØ§ØªÙŠØ­"
+        />
+        <ToggleCard
+          free on={settings.freeOnly} onFlip={() => flipSetting('freeOnly')}
+          icon="ðŸ†“" title="Ø§Ù„Ù†Ù…Ø§Ø°Ø¬ Ø§Ù„Ù…Ø¬Ø§Ù†ÙŠØ© ÙÙ‚Ø·" badge={settings.freeOnly ? 'FREE' : 'ALL'}
+          desc="Ø²Ø±Ø§Ø± OmniRoute Ø§Ù„Ø´Ù‡ÙŠØ±: ÙŠÙ‚ÙÙ„ Ø£ÙŠ Ù…ÙˆØ¯ÙŠÙ„ Ù…Ø¯ÙÙˆØ¹ ÙˆØ§Ù„ØªÙˆØ¬ÙŠÙ‡ ÙŠØ¨Ù‚Ù‰ Ø¹Ù„Ù‰ free tiers Ø¨Ø³ (Groq / NVIDIA NIM / OpenRouter Free / Mistral / Gemini Flash)."
+          onText="Ù…Ø¬Ø§Ù†ÙŠ ÙÙ‚Ø· â€” Ø§Ù„Ù…Ø¯ÙÙˆØ¹ Ù…Ù‚ÙÙˆÙ„" offText="ÙƒÙ„ Ø§Ù„Ù…ÙˆØ¯ÙŠÙ„Ø§Øª Ù…Ø³Ù…ÙˆØ­Ø© (Ù…Ø¬Ø§Ù†ÙŠ + Ù…Ø¯ÙÙˆØ¹)"
+        />
+      </div>
+
+      {/* ====== Ø¥Ø¶Ø§ÙØ© Ù…Ø²ÙˆØ¯ ====== */}
+      <form className="gw-card" onSubmit={addProvider}>
+        <div className="gw-sec-title"><span className="gw-ic">âž•</span> Ø¥Ø¶Ø§ÙØ© Ù…Ø²ÙˆØ¯ / Ù…ÙˆØ¯ÙŠÙ„ â€” Ø£ÙŠ Ù…ÙˆØ¯ÙŠÙ„ØŒ Ø£ÙŠ Ù…Ø²ÙˆÙ‘Ø¯ (OmniRoute-style)</div>
+        <div className="gw-sec-sub">
+          Ø£ÙŠ endpoint Ù…ØªÙˆØ§ÙÙ‚ Ù…Ø¹ OpenAI: Ø¶ÙŠÙ Ø§Ù„Ù€ Base URL ÙˆØ§Ù„Ù…ÙØªØ§Ø­ ÙˆØ§Ù„Ù…Ø­ÙˆØ± Ø¨ÙŠÙƒØªØ´Ù Ù…ÙˆØ¯ÙŠÙ„Ø§ØªÙ‡ ØªÙ„Ù‚Ø§Ø¦ÙŠØ§Ù‹ Ù…Ù†
+          <code> GET {'{base}'}/v1/models </code>. Ø£Ùˆ Ø§Ø³ØªØ®Ø¯Ù… ModelPicker â†’ "Ø¬Ù…ÙŠØ¹ Ø§Ù„Ù…ÙˆØ¯ÙŠÙ„Ø§Øª" Ù„Ø¥Ø¶Ø§ÙØ©/Ø§Ø®ØªÙŠØ§Ø± Ø£ÙŠ Ù…ÙˆØ¯ÙŠÙ„ Ù…Ù† ÙƒØªØ§Ù„ÙˆØ¬ OmniRoute Ø§Ù„Ù…Ø­Ù„ÙŠØŒ Ø£Ùˆ Ø²Ø± "Ø¬Ù…ÙŠØ¹ Ø§Ù„Ù…ÙˆØ¯ÙŠÙ„Ø§Øª" Ø¹Ù„Ù‰ Ø§Ù„Ù…Ø²ÙˆØ¯ Ù„Ù…Ø²Ø§Ù…Ù†Ø© /v1/models. Ù„Ùˆ Ø¹Ù†Ø¯Ùƒ OmniRoute Ø´ØºØ§Ù„: <code>http://localhost:20128/v1</code>.
+        </div>
+        <div className="gw-addform">
+          <label className="gw-field"><span>Ø§Ø³Ù… Ø§Ù„Ù…Ø²ÙˆÙ‘Ø¯</span>
+            <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Groq / OpenRouter / Ø³ÙŠØ±ÙØ±ÙŠ Ø£Ù†Ø§" />
+          </label>
+          <label className="gw-field"><span>Base URL</span>
+            <input dir="ltr" value={form.url} onChange={(e) => setForm({ ...form, url: e.target.value })} placeholder="https://api.groq.com/openai/v1" />
+          </label>
+          <label className="gw-field"><span>API Key</span>
+            <input dir="ltr" type="password" value={form.key} onChange={(e) => setForm({ ...form, key: e.target.value })} placeholder="gsk_... / sk-..." autoComplete="off" />
+          </label>
+          <label className="gw-field"><span>Ø§Ù„Ù†ÙˆØ¹</span>
+            <select value={form.tier} onChange={(e) => setForm({ ...form, tier: e.target.value })}>
+              <option value="free">ðŸ†“ Ù…Ø¬Ø§Ù†ÙŠ (free tier)</option>
+              <option value="paid">ðŸ’° Ù…Ø¯ÙÙˆØ¹</option>
+            </select>
+          </label>
+          <button className="gw-btn gw-btn-red" disabled={saving}>{saving ? 'Ø¬Ø§Ø±ÙŠ Ø§Ù„ØªÙˆØµÙŠÙ„â€¦' : 'ØªÙˆØµÙŠÙ„ Ø§Ù„Ù…Ø²ÙˆÙ‘Ø¯'}</button>
+        </div>
+        <div className="gw-hint">ðŸ”’ Ø§Ù„Ù…ÙØªØ§Ø­ Ø¨ÙŠØªØ®Ø²Ù† ÙÙŠ Ø§Ù„Ù€ backend Ù…Ø´ ÙÙŠ Ø§Ù„ÙˆØ§Ø¬Ù‡Ø©ØŒ ÙˆØ¨ÙŠØ¸Ù‡Ø± Ù…ØªÙ‚Ù†Ù‘Ø¹ (<code>{maskKey('gsk_demo7f2a9b1c')}</code>)</div>
+      </form>
+
+      {/* ====== Ø§Ù„Ù…Ø²ÙˆØ¯ÙˆÙ† Ø§Ù„Ù…ØªØµÙ„ÙˆÙ† ====== */}
+      <div className="gw-sec-title" style={{ margin: '18px 0 10px' }}>
+        <span className="gw-ic">ðŸ”—</span> Ø§Ù„Ù…Ø²ÙˆØ¯ÙˆÙ† Ø§Ù„Ù…ØªØµÙ„ÙˆÙ†
+        <span className="gw-badge gw-badge-free">{freeEnabled} Ù…Ø¬Ø§Ù†ÙŠ</span>
+        <span className="gw-badge">{enabled.length} ÙŠØ¹Ù…Ù„</span>
+        <span className="gw-badge" title="Providers with models/status">/{providers.length} Ù…Ø²ÙˆØ¯</span>
+      </div>
+      <div className="gw-hint" style={{marginBottom:10}}>Gateway ÙŠØ¹Ø±Ø¶ Ø§Ù„Ù…Ø²ÙˆØ¯Ø§Øª Ø°Ø§Øª Ø§Ù„Ø­Ø§Ù„Ø©/Ø§Ù„Ù…ÙˆØ¯ÙŠÙ„Ø§ØªØ› Ø§Ø®ØªÙŠØ§Ø± Ø§Ù„Ù…ÙˆØ¯ÙŠÙ„Ø§Øª ÙÙŠ Ø§Ù„Ø´Ø§Øª ÙŠØ³ØªØ®Ø¯Ù… Ø§Ù„Ù…ÙˆØ¯ÙŠÙ„Ø§Øª Ø§Ù„Ø¹Ø§Ù…Ù„Ø© ÙÙ‚Ø· (`workingOnly`).</div>
+            <div className="gw-grid gw-stagger">
+        {visibleProviders.map((p) => {
+          const working = p.enabled && p.status === 'ok';
+          return (
+          <div key={p.id} className={'gw-prov' + (p.enabled ? '' : ' gw-off')}>
+            <div className="gw-prov-head">
+              <div className="gw-avatar">{String(p.name||'??').slice(0, 2).toUpperCase()}</div>
+              <div className="gw-prov-id">
+                <div className="gw-nm">{p.name}</div>
+                <div className="gw-url mono">{p.baseUrl}</div>
+              </div>
+              <span className={'gw-badge ' + (working ? 'gw-badge-ok' : p.enabled ? 'gw-badge-err' : '')}>
+                {working ? 'ÙŠØ¹Ù…Ù„' : p.enabled ? String(p.status || 'ØºÙŠØ± Ù…ØªØµÙ„') : 'Ù…Ø¹Ø·Ù„'}
+              </span>
+            </div>
+            <div className="gw-key mono">ðŸ”‘ {maskKey(p.keyMasked || p.key)}</div>
+            <div className="gw-meta">
+              <span>ðŸ“¦ <b>{p.modelsCount ?? (p.models || []).length}</b> Ù…ÙˆØ¯ÙŠÙ„</span>
+              <span className={'gw-badge ' + (p.tier === 'free' ? 'gw-badge-free' : 'gw-badge-paid')}>
+                {p.tier === 'free' ? 'ðŸ†“ Free tier' : 'ðŸ’° Paid'}
+              </span>
+              {!working && p.enabled ? <span className="gw-badge gw-badge-err">Ù„ÙŠØ³ Ø¬Ø§Ù‡Ø²Ù‹Ø§ Ù„Ù„ØªÙˆØ¬ÙŠÙ‡</span> : null}
+            </div>
+            <div className="gw-acts">
+              <button type="button" className="gw-btn gw-btn-ghost" disabled={testing === p.id} onClick={() => testProvider(p.id)}>
+                {testing === p.id ? <span className="gw-spin" /> : 'ðŸ”Œ'} Ø§Ø®ØªØ¨Ø§Ø±
+              </button>
+              <button type="button" className="gw-btn gw-btn-ghost" disabled={testing === p.id} onClick={() => syncModels(p.id)} title="Ø¬Ù„Ø¨ Ø¬Ù…ÙŠØ¹ Ø§Ù„Ù…ÙˆØ¯ÙŠÙ„Ø§Øª Ù…Ù† Ø§Ù„Ù…Ø²ÙˆØ¯">
+                {testing === p.id ? <span className="gw-spin" /> : 'ðŸ“¦'} Ù…Ø²Ø§Ù…Ù†Ø© Ø§Ù„Ù…ÙˆØ¯ÙŠÙ„Ø§Øª
+              </button>
+              <button type="button" className="gw-btn gw-btn-ghost" onClick={() => toggleProvider(p)}>
+                {p.enabled ? 'â¸ ØªØ¹Ø·ÙŠÙ„' : 'â–¶ ØªÙØ¹ÙŠÙ„'}
+              </button>
+              <button type="button" className="gw-btn gw-btn-danger" onClick={() => deleteProvider(p)}>ðŸ—‘</button>
+            </div>
+          </div>
+          );
+        })}
+        {!visibleProviders.length && <div className="gw-card gw-empty">Ù…ÙÙŠØ´ Ù…Ø²ÙˆØ¯ÙŠÙ† Ø´ØºØ§Ù„ÙŠÙ†/Ù…Ø¶Ø§ÙÙŠÙ† â€” Ø¶ÙŠÙ Ù…Ø²ÙˆØ¯ Ø£Ùˆ ÙØ¹Ù‘Ù„/Ø§Ø®ØªØ¨Ø± Ù…Ø²ÙˆØ¯ Ù…ÙˆØ¬ÙˆØ¯.</div>}
+      </div>
+    </div>
+  );
+}

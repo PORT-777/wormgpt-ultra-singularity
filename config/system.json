@@ -1,0 +1,48 @@
+{
+  "system": {
+    "name": "🔥😈 PORT 777 EVIL ☠️🔥👹 - Singularity Edition",
+    "version": "1.0.0",
+    "architecture": "ReAct-E Unified",
+    "platform": "Windows 11"
+  },
+  "models": {
+    "primary": "groq",
+    "secondary": "gemini",
+    "fallback": "huggingface",
+    "api_keys": {
+      "groq": "FILL: GROQ_API_KEY",
+      "gemini": "FILL: GEMINI_API_KEY",
+      "huggingface": "FILL: HF_API_KEY"
+    }
+  },
+  "paths": {
+    "workspace": "backend/workspace",
+    "drivers": "drivers",
+    "logs": "logs"
+  },
+  "memory": {
+    "page_size": 4096,
+    "alignment": 16,
+    "max_pointer_depth": 16
+  },
+  "stealth": {
+    "anti_debug": true,
+    "anti_vm": true,
+    "sleep_obfuscation": true,
+    "string_encryption": true
+  },
+  "modules": [
+    "core.memory_manager",
+    "core.decision_matrix",
+    "core.agent_engine",
+    "backend.tools.memory_calc",
+    "backend.tools.cpp_expert",
+    "backend.tools.reverse_analyzer",
+    "backend.tools.file_master",
+    "backend.tools.cyber_sentinel"
+  ],
+  "prompts": {
+    "kilo_core_boot": "backend/prompts/kilo_core_boot.txt",
+    "enabled": true
+  }
+}
