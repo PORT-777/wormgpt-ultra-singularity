@@ -45,7 +45,11 @@ claude mcp add --transport http port777 http://127.0.0.1:3000/mcp
 ```
 
 Before publishing, replace the local URL in each `.mcp.json` with the real
-hosted URL and use the **same URL** in `plugin-directory/marketplace.json`.
+production URL — the bundles already ship `https://mcp.port777.ai/mcp`, which
+must be deployed before publishing. For local development, run the server on
+`127.0.0.1:3000` and point your Claude config at it temporarily; never commit
+that override. Set `MCP_SERVER_URL` in the deployment environment to keep the
+MCP App UI domain consistent.
 
 ## Validation
 

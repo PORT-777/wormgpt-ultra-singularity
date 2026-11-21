@@ -15,6 +15,10 @@ python migrate.py             # apply additive migrations
 Rules:
 
 - `001_initial.sql` uses only `CREATE TABLE IF NOT EXISTS` / `CREATE INDEX IF NOT EXISTS`.
+- `003_unify_ownership.sql` adds `user_id` ownership to sessions/messages, a
+  stable `uuid` column on `saas_users`, and `TIMESTAMPTZ` projections kept in
+  sync by triggers. Existing text ids are never rewritten.
+- `004_rls_ownership.sql` extends Row Level Security to sessions/messages.
 - No destructive operation is ever run automatically.
 - To make a breaking change, add a new numbered migration and review it before
   applying. Keep a Supabase point-in-time recovery point.

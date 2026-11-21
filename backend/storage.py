@@ -81,6 +81,14 @@ def init() -> None:
         cols = [r[1] for r in c.execute("PRAGMA table_info(messages)").fetchall()]
         if "run_id" not in cols:
             c.execute("ALTER TABLE messages ADD COLUMN run_id TEXT DEFAULT ''")
+        if "user_id" not in cols:
+            c.execute("ALTER TABLE messages ADD COLUMN user_id TEXT DEFAULT 'default_user'")
+    except Exception:
+        pass
+    try:
+        cols = [r[1] for r in c.execute("PRAGMA table_info(sessions)").fetchall()]
+        if "user_id" not in cols:
+            c.execute("ALTER TABLE sessions ADD COLUMN user_id TEXT DEFAULT 'default_user'")
     except Exception:
         pass
     c.commit()
@@ -93,20 +101,23 @@ def _now() -> float:
 # ========================================================================= #
 #  Sessions / messages
 # ========================================================================= #
-def ensure_session(sid: str, title: str = "new session") -> None:
+def ensure_session(sid: str, title: str = "new session", user_id: str = "") -> None:
     c = _conn()
     if not c.execute("SELECT 1 FROM sessions WHERE id=?", (sid,)).fetchone():
-        c.execute("INSERT INTO sessions(id, created, title) VALUES (?,?,?)",
-                  (sid, _now(), title))
+        c.execute("INSERT INTO sessions(id, created, title, user_id) VALUES (?,?,?,?)",
+                  (sid, _now(), title, str(user_id or "default_user")[:80]))
         c.commit()
 
 
-def add_message(sid: str, role: str, content: str, run_id: str = "") -> int:
-    ensure_session(sid)
+def add_message(sid: str, role: str, content: str, run_id: str = "",
+                user_id: str = "") -> int:
+    ensure_session(sid, user_id=user_id)
     c = _conn()
     cur = c.execute(
-        "INSERT INTO messages(session_id, role, content, ts, run_id) VALUES (?,?,?,?,?)",
-        (sid, role, str(content or "")[:120000], _now(), str(run_id or "")[:80]))
+        "INSERT INTO messages(session_id, role, content, ts, run_id, user_id) "
+        "VALUES (?,?,?,?,?,?)",
+        (sid, role, str(content or "")[:120000], _now(), str(run_id or "")[:80],
+         str(user_id or "default_user")[:80]))
     if role == "user":
         try:
             first = c.execute(

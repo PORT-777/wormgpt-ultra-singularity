@@ -32,10 +32,22 @@ def _schema():
     plans.seed()
 
 
+def _storage_modules():
+    # Both `storage_backends` and `backend.storage_backends` can be loaded
+    # because the app and the tests import the package in different ways.
+    return {m for name, m in sys.modules.items() if name.endswith("storage_backends")}
+
+
+def _use_local_storage(monkeypatch, tmp_path):
+    for module in _storage_modules():
+        monkeypatch.setattr(module, "_BACKEND", module.LocalStorage())
+        monkeypatch.setattr(module, "LOCAL_ROOT", tmp_path / "objects")
+
+
 @pytest.fixture()
-def local_storage(monkeypatch):
-    monkeypatch.setattr(storage_backends, "_BACKEND", storage_backends.LocalStorage())
-    return storage_backends.backend()
+def local_storage(monkeypatch, tmp_path):
+    _use_local_storage(monkeypatch, tmp_path)
+    return files.objects.backend()
 
 
 def _account():
@@ -92,7 +104,8 @@ def test_local_storage_roundtrip_and_private_access(local_storage, tmp_path):
 
 
 def test_file_upload_download_and_tenant_isolation(local_storage, monkeypatch, tmp_path):
-    storage_backends.LOCAL_ROOT = tmp_path / "objects"
+    for _module in _storage_modules():
+        _module.LOCAL_ROOT = tmp_path / "objects"
     _, _, _, owner = _account()
     _, _, _, other = _account()
 
@@ -122,7 +135,8 @@ def test_file_upload_download_and_tenant_isolation(local_storage, monkeypatch, t
 
 
 def test_upload_limits_are_enforced(local_storage, tmp_path):
-    storage_backends.LOCAL_ROOT = tmp_path / "objects"
+    for _module in _storage_modules():
+        _module.LOCAL_ROOT = tmp_path / "objects"
     _, _, _, headers = _account()
     r = client.post(
         "/api/saas/files/upload",

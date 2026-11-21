@@ -7,7 +7,8 @@ import { z } from 'zod';
 
 const BACKEND = (process.env.PORT777_BACKEND_URL || 'http://127.0.0.1:7777').replace(/\/$/, '');
 const TOKEN = process.env.PORT777_API_TOKEN || '';
-const UI_DOMAIN = '10bdc5a54dacfdbcd71f607f906f1045.claudemcpcontent.com';
+const MCP_SERVER_URL = process.env.MCP_SERVER_URL || 'https://mcp.port777.ai/mcp';
+const UI_DOMAIN = '51e74df0951c76854fa966c64fa536d7.claudemcpcontent.com';
 
 function text(value) {
   return { content: [{ type: 'text', text: JSON.stringify(value, null, 2) }] };
@@ -120,7 +121,7 @@ function buildServer() {
       api('/api/health'), api('/api/models'), api('/api/computer/providers'),
     ]);
     return {
-      content: [{ type: 'text', text: JSON.stringify({ health, models, providers }) }],
+      content: [{ type: 'text', text: JSON.stringify({ server: MCP_SERVER_URL, health, models, providers }) }],
       _meta: { ui: { domain: UI_DOMAIN } },
     };
   });
