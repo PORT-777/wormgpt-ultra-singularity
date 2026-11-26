@@ -17,6 +17,30 @@ from external_apis.config import config as ext_config
 router = APIRouter(prefix="/api/internal", tags=["ai-platform"])
 
 
+def _platform_module(name: str):
+    """Import a capability module even when stdlib `platform` shadows the package.
+
+    Uvicorn started as `backend.main:app` puts the stdlib `platform` module
+    ahead of our top-level `platform/` package on sys.path. Loading by file
+    path makes these routes work in both launch modes.
+    """
+    import importlib.util
+    import sys
+    from pathlib import Path
+
+    try:
+        return importlib.import_module(f"platform.{name}")
+    except Exception:
+        path = Path(__file__).resolve().parent.parent / "platform" / f"{name}.py"
+        spec = importlib.util.spec_from_file_location(f"platform_{name}", path)
+        if spec is None or spec.loader is None:
+            raise RuntimeError(f"cannot load platform module {name}")
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[spec.name] = module
+        spec.loader.exec_module(module)
+        return module
+
+
 def _auth(key: Optional[str]) -> None:
     if not ext_config.internal_key:
         raise HTTPException(status_code=503, detail="internal services disabled")
@@ -380,7 +404,8 @@ async def jobs_result(job_id: str, x_internal_key: Optional[str] = Header(None))
 @router.post("/workflows/run")
 async def workflows_run(body: WorkflowRequest, x_internal_key: Optional[str] = Header(None)):
     _auth(x_internal_key)
-    from platform.workflow_engine import Workflow, execute_workflow
+    Workflow = _platform_module("workflow_engine").Workflow
+    execute_workflow = _platform_module("workflow_engine").execute_workflow
     r = await execute_workflow(Workflow(**body.workflow), body.trigger_input)
     return r.model_dump()
 
@@ -388,7 +413,7 @@ async def workflows_run(body: WorkflowRequest, x_internal_key: Optional[str] = H
 @router.post("/sessions")
 async def sessions_create(body: Dict[str, Any], x_internal_key: Optional[str] = Header(None)):
     _auth(x_internal_key)
-    from platform.chat_session import create_session
+    create_session = _platform_module("chat_session").create_session
     s = create_session(str(body.get("user_id", "default")), str(body.get("model", "auto")))
     return s.model_dump()
 
@@ -396,7 +421,7 @@ async def sessions_create(body: Dict[str, Any], x_internal_key: Optional[str] = 
 @router.get("/sessions/{session_id}")
 async def sessions_get(session_id: str, x_internal_key: Optional[str] = Header(None)):
     _auth(x_internal_key)
-    from platform.chat_session import get_session
+    get_session = _platform_module("chat_session").get_session
     s = get_session(session_id)
     if not s:
         raise HTTPException(status_code=404, detail="session not found")
@@ -406,7 +431,7 @@ async def sessions_get(session_id: str, x_internal_key: Optional[str] = Header(N
 @router.post("/workspaces")
 async def workspaces_create(body: Dict[str, Any], x_internal_key: Optional[str] = Header(None)):
     _auth(x_internal_key)
-    from platform.workspace import create_workspace
+    create_workspace = _platform_module("workspace").create_workspace
     ws = create_workspace(str(body.get("name", "default")))
     return ws.model_dump()
 
@@ -414,7 +439,7 @@ async def workspaces_create(body: Dict[str, Any], x_internal_key: Optional[str] 
 @router.get("/workspaces")
 async def workspaces_list(x_internal_key: Optional[str] = Header(None)):
     _auth(x_internal_key)
-    from platform.workspace import list_workspaces
+    list_workspaces = _platform_module("workspace").list_workspaces
     return {"workspaces": [ws.model_dump() for ws in list_workspaces()]}
 
 
@@ -422,14 +447,14 @@ async def workspaces_list(x_internal_key: Optional[str] = Header(None)):
 async def workspaces_chat(ws_id: str, body: TextRequest,
                           x_internal_key: Optional[str] = Header(None)):
     _auth(x_internal_key)
-    from platform.workspace import chat
+    chat = _platform_module("workspace").chat
     return await chat(ws_id, body.question or body.text)
 
 
 @router.post("/code/write")
 async def code_write(body: Dict[str, Any], x_internal_key: Optional[str] = Header(None)):
     _auth(x_internal_key)
-    from platform.code_environment import CodeEnvironment
+    CodeEnvironment = _platform_module("code_environment").CodeEnvironment
     env = CodeEnvironment(session_id=str(body.get("session_id", "default")))
     return {"path": await env.write_file(str(body.get("path", "f.txt")),
                                          str(body.get("content", "")))}
@@ -438,7 +463,7 @@ async def code_write(body: Dict[str, Any], x_internal_key: Optional[str] = Heade
 @router.post("/code/run")
 async def code_run(body: Dict[str, Any], x_internal_key: Optional[str] = Header(None)):
     _auth(x_internal_key)
-    from platform.code_environment import CodeEnvironment
+    CodeEnvironment = _platform_module("code_environment").CodeEnvironment
     env = CodeEnvironment(session_id=str(body.get("session_id", "default")))
     if body.get("code"):
         return await env.run_python(str(body["code"]))
@@ -449,5 +474,5 @@ async def code_run(body: Dict[str, Any], x_internal_key: Optional[str] = Header(
 @router.get("/code/files")
 async def code_files(x_internal_key: Optional[str] = Header(None)):
     _auth(x_internal_key)
-    from platform.code_environment import CodeEnvironment
+    CodeEnvironment = _platform_module("code_environment").CodeEnvironment
     return {"files": await CodeEnvironment(session_id="default").list_files()}
