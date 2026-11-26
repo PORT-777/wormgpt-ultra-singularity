@@ -110,6 +110,18 @@ SCAN_DEPTH_CHARS = {"quick": 7000, "standard": 8000, "deep": 10000}
 MAX_REFLECTIONS = 2         # legacy soft cap (superseded by retry ledger)
 TOOL_EXEC_TIMEOUT = 40      # seconds for PythonInterpreter
 
+# Native tool calling (OpenAI-style function calls). Models without
+# bind_tools automatically fall back to the text-ReAct loop.
+NATIVE_TOOL_CALLS = os.getenv("NATIVE_TOOL_CALLS", "true").lower() in {
+    "1", "true", "yes", "on",
+}
+# Cap advertised function schemas. 44 definitions pushed a Groq on-demand
+# request over its 8000 TPM limit (HTTP 413).
+NATIVE_TOOL_LIMIT = int(os.getenv("NATIVE_TOOL_LIMIT", "8"))
+# Hard per-request character budget. Model context windows are far larger
+# than provider ITPM limits, so trim on characters as well as tokens.
+MAX_PROMPT_CHARS = int(os.getenv("MAX_PROMPT_CHARS", "12000"))
+
 # ------------------------------------------------------------------ #
 #  v5 :: crew + deep memory
 # ------------------------------------------------------------------ #

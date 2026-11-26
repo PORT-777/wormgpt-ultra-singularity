@@ -110,6 +110,41 @@ def load_packs() -> List[Dict]:
     return packs
 
 
+# Single generic words appear in hundreds of packs and made selection almost
+# random ("write a PE parser" matched "arbitrary-write-to-rce").
+_GENERIC_TRIGGERS = {
+    "app", "tool", "script", "program", "code", "file", "web", "help",
+    "work", "task", "build", "write", "make", "use", "run", "agent",
+}
+
+
+def _trigger_score(text: str, triggers: List[str]) -> float:
+    """Specificity-weighted relevance. Word boundaries stop 'write' from
+    matching 'rewrite'; phrases outweigh single words; generic words are weak."""
+    score = 0.0
+    for raw in triggers:
+        key = str(raw).strip().lower()
+        if not key:
+            continue
+        words = re.findall(r"\w+", key, re.UNICODE)
+        if len(words) >= 2:
+            hit = key in text
+        else:
+            # optional plural suffix keeps "ioc" matching "IOCs" without
+            # reintroducing substring matches like "write" -> "rewrite".
+            hit = bool(re.search(r"(?<!\w)" + re.escape(key)
+                                 + r"(?:es|s)?(?!\w)", text, re.UNICODE))
+        if not hit:
+            continue
+        if len(words) >= 2:
+            score += 3.0 + min(len(key), 30) / 30.0
+        elif key in _GENERIC_TRIGGERS:
+            score += 0.25
+        else:
+            score += 1.0 + min(len(key), 16) / 16.0
+    return score
+
+
 def relevant_packs(task: Optional[str],
                    cap: Optional[int] = None) -> List[Dict]:
     """Always-on packs first, then task-matched (model-invoked) packs,
@@ -126,13 +161,16 @@ def relevant_packs(task: Optional[str],
         return [p for p in packs if p["always"]][:cap]
     text = task.lower()
 
-    def _hits(p: Dict) -> int:
-        return sum(1 for k in p["trigger_when"] if k in text)
-
     always = [p for p in packs if p["always"]]
-    auto = sorted(
-        (p for p in packs if not p["always"] and _hits(p)),
-        key=lambda p: (-_hits(p), p["name"]))
+    scored = []
+    for p in packs:
+        if p["always"]:
+            continue
+        value = _trigger_score(text, p["trigger_when"])
+        if value > 0:
+            scored.append((value, p))
+    scored.sort(key=lambda item: (-item[0], item[1]["name"]))
+    auto = [p for _, p in scored]
     cap2 = max(0, cap - len(always))
     return always + auto[:cap2]
 

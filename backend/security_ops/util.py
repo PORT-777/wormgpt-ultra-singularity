@@ -772,7 +772,7 @@ def ioc_export_payload(iocs: Dict[str, Any], fmt: str = "json",
                        source: str = "") -> Tuple[str, str]:
     """Build an export bundle; returns (filename, content)."""
     cats = iocs.get("categories", iocs)
-    stamp = _dt.datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+    stamp = _dt.datetime.now(_dt.timezone.utc).strftime("%Y%m%d_%H%M%S")
     flat: List[Dict[str, Any]] = []
     kind_map = {
         "urls": "url", "domains": "domain", "ipv4": "ipv4", "ipv6": "ipv6",
@@ -807,12 +807,12 @@ def ioc_export_payload(iocs: Dict[str, Any], fmt: str = "json",
             objects.append({
                 "type": "indicator", "spec_version": "2.1",
                 "id": f"indicator--{hashlib.sha256((item['type']+item['value']).encode()).hexdigest()}",
-                "created": _dt.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
-                "modified": _dt.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
+                "created": _dt.datetime.now(_dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+                "modified": _dt.datetime.now(_dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
                 "name": f"{item['type']}: {item['value']}",
                 "pattern_type": "stix",
                 "pattern": _stix_pattern(item["type"], item["value"]),
-                "valid_from": _dt.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
+                "valid_from": _dt.datetime.now(_dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
                 "labels": ["malicious-activity"],
             })
         bundle = {"type": "bundle", "id": f"bundle--{hashlib.sha256(str(flat).encode()).hexdigest()}",
@@ -837,7 +837,8 @@ def ioc_export_payload(iocs: Dict[str, Any], fmt: str = "json",
                            "threat_level_id": "2", "analysis": "1",
                            "Attribute": attrs}}
         return f"iocs_{stamp}_misp.json", json_dumps(event)
-    payload = {"generated": _dt.datetime.utcnow().isoformat() + "Z",
+    payload = {"generated": _dt.datetime.now(_dt.timezone.utc)
+                       .replace(tzinfo=None).isoformat() + "Z",
                "source": source, "count": len(flat), "indicators": flat,
                "raw": cats}
     return f"iocs_{stamp}.json", json_dumps(payload)
@@ -921,7 +922,11 @@ def parse_time(value: Any) -> Optional[_dt.datetime]:
             if fmt is None:
                 d = _dt.datetime.fromisoformat(s2)
             else:
-                d = _dt.datetime.strptime(s, fmt)
+                parse_s, parse_fmt = s, fmt
+                if fmt == "%b %d %H:%M:%S":
+                    parse_s = f"{_dt.datetime.now().year} {s}"
+                    parse_fmt = "%Y %b %d %H:%M:%S"
+                d = _dt.datetime.strptime(parse_s, parse_fmt)
                 if d.tzinfo is None and "%z" not in fmt:
                     d = d.replace(tzinfo=_dt.timezone.utc)
             return d if d.tzinfo else d.replace(tzinfo=_dt.timezone.utc)

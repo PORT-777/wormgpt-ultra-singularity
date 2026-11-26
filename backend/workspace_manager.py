@@ -11,7 +11,7 @@ import os
 import shutil
 import subprocess
 import threading
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -180,7 +180,7 @@ class WorkspaceManager:
 
         snap_root = Path("data") / "snapshots" / workspace_id
         snap_root.mkdir(parents=True, exist_ok=True)
-        snap_id = datetime.utcnow().strftime("%Y%m%d%H%M%S%f")[:17]
+        snap_id = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S%f")[:17]
         snap_dir = snap_root / snap_id
         snap_dir.mkdir(parents=True, exist_ok=True)
 
@@ -196,7 +196,7 @@ class WorkspaceManager:
         entry = {
             "id": snap_id,
             "label": label or f"snapshot-{snap_id}",
-            "ts": datetime.utcnow().isoformat() + "Z",
+            "ts": datetime.now(timezone.utc).replace(tzinfo=None).isoformat() + "Z",
             "workspace_id": workspace_id,
             "path": str(target),
             "file_count": file_count,
@@ -419,7 +419,7 @@ class WorkspaceManager:
     def _audit(self, action: str, workspace_id: str, path: str, meta: Dict[str, Any]):
         """Record an audit entry."""
         entry = {
-            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "timestamp": datetime.now(timezone.utc).replace(tzinfo=None).isoformat() + "Z",
             "action": action,
             "workspace_id": workspace_id,
             "path": path,

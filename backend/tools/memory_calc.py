@@ -46,11 +46,12 @@ class MemoryLogicCalculator(Tool):
         "Debugging MATH ONLY (touching no process): pointer/offset "
         "arithmetic for your own software. {'op': 'add'|'sub'|'delta'|"
         "'chain'|'hex2dec'|'dec2hex'|'struct_offset', 'base': '7FF...', "
-        "'offsets': [..], 'a': .., 'b': .., 'fields': {..}} "
+        "'offsets': [..], 'a': .., 'b': .., 'fields': {..}, "
+        "'value': '0x10' for hex2dec/dec2hex} "
         "Every result is plain arithmetic you can verify by hand."
     )
     example = {"op": "chain", "base": "7FF6A1B2C000",
-               "offsets": ["0x10", "0x28", "0x1C"]}
+               "offsets": ["0x10", "0x28", "0x1C"], "value": "0x10"}
 
     async def run(self, **kw: Any) -> str:
         try:

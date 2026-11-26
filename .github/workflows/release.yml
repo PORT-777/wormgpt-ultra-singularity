@@ -26,7 +26,9 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - run: npm --prefix frontend ci
       - uses: tauri-apps/tauri-action@v0
-        with: { tagName: ${{ github.ref_name }, releaseName: "🔥😈 PORT 777 EVIL ☠️🔥👹" }
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: "🔥😈 PORT 777 EVIL ☠️🔥👹"
 
   android:
     runs-on: ubuntu-latest

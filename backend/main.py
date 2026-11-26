@@ -211,6 +211,14 @@ try:
 except Exception as exc:  # pragma: no cover
     logger.warning("security API not mounted: %s", exc)
 
+try:
+    from external_apis.api import router as external_apis_router
+
+    mount_router(app, external_apis_router)
+    logger.info("internal external-API services mounted at /api/internal/*")
+except Exception as exc:  # pragma: no cover
+    logger.warning("internal external-API services not mounted: %s", exc)
+
 # --- MCP control plane --------------------------------------------------
 from fastapi import APIRouter, Body  # noqa: E402
 

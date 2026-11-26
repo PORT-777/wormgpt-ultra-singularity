@@ -1,0 +1,55 @@
+{
+  "python": "3.13.15",
+  "zero_refusal": true,
+  "prompt": {
+    "source": "D:\\xxxGPT\\WormGPT_Ultra_Singularity\\backend\\prompts\\system_prompt.txt",
+    "chars": 4580,
+    "tools_placeholders": 1
+  },
+  "tools": {
+    "registered": 44,
+    "broken_on_init": [],
+    "native_call_definitions": 44,
+    "native_calls_enabled": true
+  },
+  "skills": {
+    "loaded": 1174,
+    "always_on": [
+      "superpowers-core-discipline",
+      "vendor-hub"
+    ],
+    "selection_samples": {
+      "write a PE parser in C++": [
+        "superpowers-core-discipline",
+        "vendor-hub",
+        "int-strix-extension-argument-injection"
+      ],
+      "derive struct layout and offsets for a binary": [
+        "superpowers-core-discipline",
+        "vendor-hub",
+        "offset_forensics_playbook"
+      ],
+      "web pentest on my own app": [
+        "superpowers-core-discipline",
+        "vendor-hub",
+        "strix-web-pentest"
+      ],
+      "hello there": [
+        "superpowers-core-discipline",
+        "vendor-hub"
+      ]
+    }
+  },
+  "sandbox": {
+    "error": "AttributeError: module 'sandbox' has no attribute 'status'"
+  },
+  "providers_ready": {
+    "LOCAL_READY": false,
+    "GROQ_READY": true,
+    "GEMINI_READY": true,
+    "HF_READY": true,
+    "OPENROUTER_READY": true,
+    "KILO_READY": true,
+    "Z_AI_READY": true
+  }
+}

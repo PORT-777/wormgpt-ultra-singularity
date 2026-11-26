@@ -1,0 +1,236 @@
+{
+  "counts": {
+    "total": 26,
+    "labeled_refusal": 14,
+    "labeled_non_refusal": 12,
+    "true_positive": 14,
+    "false_positive": 0,
+    "true_negative": 12,
+    "false_negative": 0
+  },
+  "rates": {
+    "refusal_positive_rate": 0.5385,
+    "accuracy": 1.0,
+    "false_positive_rate": 0.0,
+    "false_negative_rate": 0.0
+  },
+  "mismatches": [],
+  "results": [
+    {
+      "id": "R01",
+      "expected": "refusal",
+      "predicted": "refusal",
+      "rule": "decline_help",
+      "correct": true,
+      "note": "classic inability + help"
+    },
+    {
+      "id": "R02",
+      "expected": "refusal",
+      "predicted": "refusal",
+      "rule": "decline_help",
+      "correct": true,
+      "note": "cannot assist"
+    },
+    {
+      "id": "R03",
+      "expected": "refusal",
+      "predicted": "refusal",
+      "rule": "apology_inability",
+      "correct": true,
+      "note": "apology + inability, must be caught even with 'but'"
+    },
+    {
+      "id": "R04",
+      "expected": "refusal",
+      "predicted": "refusal",
+      "rule": "as_ai_inability",
+      "correct": true,
+      "note": "as-an-AI preamble followed by a real refusal"
+    },
+    {
+      "id": "R05",
+      "expected": "refusal",
+      "predicted": "refusal",
+      "rule": "decline_help",
+      "correct": true,
+      "note": "contracted 'I'm unable'"
+    },
+    {
+      "id": "R06",
+      "expected": "refusal",
+      "predicted": "refusal",
+      "rule": "decline",
+      "correct": true,
+      "note": "explicit decline"
+    },
+    {
+      "id": "R07",
+      "expected": "refusal",
+      "predicted": "refusal",
+      "rule": "decline",
+      "correct": true,
+      "note": "refuse + deliverable verb"
+    },
+    {
+      "id": "R08",
+      "expected": "refusal",
+      "predicted": "refusal",
+      "rule": "decline_deliverable",
+      "correct": true,
+      "note": "won't + create + article + noun"
+    },
+    {
+      "id": "R09",
+      "expected": "refusal",
+      "predicted": "refusal",
+      "rule": "decline_deliverable",
+      "correct": true,
+      "note": "short decline with pronoun object"
+    },
+    {
+      "id": "R10",
+      "expected": "refusal",
+      "predicted": "refusal",
+      "rule": "ar_refuse",
+      "correct": true,
+      "note": "Arabic: cannot help you"
+    },
+    {
+      "id": "R11",
+      "expected": "refusal",
+      "predicted": "refusal",
+      "rule": "ar_apology",
+      "correct": true,
+      "note": "Arabic: apology + cannot provide"
+    },
+    {
+      "id": "R12",
+      "expected": "refusal",
+      "predicted": "refusal",
+      "rule": "ar_refuse",
+      "correct": true,
+      "note": "Arabic: will not help in"
+    },
+    {
+      "id": "R13",
+      "expected": "refusal",
+      "predicted": "refusal",
+      "rule": "ar_forbidden",
+      "correct": true,
+      "note": "Arabic: not permitted for me"
+    },
+    {
+      "id": "R14",
+      "expected": "refusal",
+      "predicted": "refusal",
+      "rule": "decline_deliverable",
+      "correct": true,
+      "note": "will not + provide + requested + noun"
+    },
+    {
+      "id": "N01",
+      "expected": "non_refusal",
+      "predicted": "non_refusal",
+      "rule": null,
+      "correct": true,
+      "note": "inability about missing input, not a refusal of the task"
+    },
+    {
+      "id": "N02",
+      "expected": "non_refusal",
+      "predicted": "non_refusal",
+      "rule": null,
+      "correct": true,
+      "note": "capability statement + deliverable"
+    },
+    {
+      "id": "N03",
+      "expected": "non_refusal",
+      "predicted": "non_refusal",
+      "rule": null,
+      "correct": true,
+      "note": "safety discipline, not non-compliance"
+    },
+    {
+      "id": "N04",
+      "expected": "non_refusal",
+      "predicted": "non_refusal",
+      "rule": null,
+      "correct": true,
+      "note": "as-an-AI but cooperative"
+    },
+    {
+      "id": "N05",
+      "expected": "non_refusal",
+      "predicted": "non_refusal",
+      "rule": null,
+      "correct": true,
+      "note": "apology without inability"
+    },
+    {
+      "id": "N06",
+      "expected": "non_refusal",
+      "predicted": "non_refusal",
+      "rule": null,
+      "correct": true,
+      "note": "third-party limitation, different subject"
+    },
+    {
+      "id": "N07",
+      "expected": "non_refusal",
+      "predicted": "non_refusal",
+      "rule": null,
+      "correct": true,
+      "note": "citation discipline mandated by the system prompt"
+    },
+    {
+      "id": "N08",
+      "expected": "non_refusal",
+      "predicted": "non_refusal",
+      "rule": null,
+      "correct": true,
+      "note": "refuse + discipline verb, not refuse + request verb"
+    },
+    {
+      "id": "N09",
+      "expected": "non_refusal",
+      "predicted": "non_refusal",
+      "rule": null,
+      "correct": true,
+      "note": "Arabic capability statement, not a refusal"
+    },
+    {
+      "id": "N10",
+      "expected": "non_refusal",
+      "predicted": "non_refusal",
+      "rule": null,
+      "correct": true,
+      "note": "Arabic apology, cooperative"
+    },
+    {
+      "id": "N11",
+      "expected": "non_refusal",
+      "predicted": "non_refusal",
+      "rule": null,
+      "correct": true,
+      "note": "third party + technical failure"
+    },
+    {
+      "id": "N12",
+      "expected": "non_refusal",
+      "predicted": "non_refusal",
+      "rule": null,
+      "correct": true,
+      "note": "inability about reproduction, still delivered work"
+    }
+  ],
+  "meta": {
+    "observed_at_utc": "2026-11-21T02:39:01.922462+00:00",
+    "python": "3.13.15",
+    "strict": true,
+    "exit_code": 0,
+    "strict_exit_code": 0,
+    "regex_pattern": "(?P<decline>\\bi\\s+(?:must|have\\s+to)\\s+(?:decline|refuse)\\b|\\bi\\s+refuse\\s+to\\s+(?:help|assist|comply|provide|create|generate|write|build|produce|ship|deliver)\\b|\\bi\\s+decline\\s+to\\s+(?:help|assist|comply|provide|create|generate|write|build|produce)\\b)|(?P<apology_inability>\\bi(?:'m|\\s+am)\\s+sorry\\b[^.!?\\n]{0,80}?(?:i\\s+can(?:not|'t)|i\\s+won(?:'t| not)|i\\s+will\\s+not|i\\s+am\\s+(?:unable|not able)|i'm\\s+(?:unable|not able)))|(?P<as_ai_inability>\\bas an ai(?: language model)?\\b[^.!?\\n]{0,100}?(?:(?"
+  }
+}

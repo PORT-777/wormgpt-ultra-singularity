@@ -21,10 +21,14 @@ v5 (crew, deep RAG, scoped god-mode, voice, scheduler, audit, docker) +
 | **ProposalChange** (tool + API) | the agent's ONLY route to change itself: submits `{title, target_path, rationale, content}` â†’ stored in SQLite + reviewable `.md` under `workspace/proposals/pending/`. UI panel lists pending proposals with approve/reject. Approve applies workspace-relative and `@backend/...` (agent's own tree) targets; absolute host paths are NEVER auto-written â€” content is exported under `proposals/imported/` for manual apply. |
 | **Engine bugs fixed** | `step_final` tuple leak into crew results, `sessions` insert schema mismatch. (40 tests green.) |
 
-Ownership boundary (unchanged, by design): the agent helps you build +
+Ownership boundary (context, not an enforced gate): the agent helps you build +
 debug **your own** software and analyze/learn from code and binaries you
-own or are licensed to. It does not produce cheating tooling for online
-multiplayer games, anti-cheat evasion, or DRM/licensing circumvention.
+own or are licensed to. This is a statement of intended use; nothing in the
+shipped build enforces it. The authoritative description of what the code
+actually does is the **ZERO_REFUSAL behavior matrix** below. In particular the
+single prompt source `backend/prompts/system_prompt.txt` contains a
+"Technical precision" block that frames offensive-sounding requests in
+engineering terms and relabels colloquial terms silently.
 
 ---
 
@@ -65,7 +69,51 @@ Storage (or an S3-compatible adapter) in production.
 
 ## Current deployment notes
 
-- **Zero-refusal mode:** `ZERO_REFUSAL=true` in `backend/.env` grants host tools, shell and mutating actions by default; no per-request God-mode toggle or approval prompt. Set it to `false` to restore the gated behaviour.
+### ZERO_REFUSAL behavior matrix
+
+The flag is read from `ZERO_REFUSAL` in `backend/.env` (shipped value: `true`)
+by `backend/configs/settings.py`. It changes runtime behaviour as follows:
+
+| Behaviour | `ZERO_REFUSAL=true` (shipped default) | `ZERO_REFUSAL=false` (gated) |
+|---|---|---|
+| Host tools / shell | implicit for every run — `backend/tools/base.py::full_access` | only via per-request `full_access: true` from the UI/API |
+| Ask/Plan mutating-tool guard | disabled — `backend/agent_engine.py::is_mode_blocked` | mutating tools blocked in `ask`/`plan` |
+| Sensitive-operation approvals | auto-approved, `decided_by="zero_refusal"` — `backend/approvals.py` | created as `pending`, require explicit approve/reject |
+| MCP execution | `execution_requires_full_access: false` — `backend/mcp_manager.py::status` | `true` |
+| Per-request God-mode toggle | not required | required |
+
+Destructive shell commands and protected OS paths remain blocked by the tool
+denylist in both states; `ADMIN_PASSWORD` and a valid login token are still
+required for API requests. The header shows the red FULL ACCESS pill during a
+run. Tests: `backend/tests/test_zero_refusal_policy.py` exercises both columns
+and asserts the shipped default.
+
+### Refusal classifier and prompt source
+
+- `backend/tests/refusal_corpus.py` — 38 labeled cases (21 refusals, 17 non-refusals including capability statements, quality statements and polite-but-cooperative replies).
+- `cd backend && python tests/refusal_baseline.py` — standalone harness, writes `tests/refusal_baseline_report.json` and exits 0 only when every case is classified correctly; `--no-strict` records behaviour without failing.
+- Measured on this build: the original 26-case corpus against the pre-narrowing regex gave TP=14 / FP=12 / TN=0 / FN=0, false-positive rate 1.0000, accuracy 0.5385, strict exit 1 (`refusal_baseline_before.json`). The current 38-case corpus against the narrowed regex gives TP=21 / FP=0 / TN=17 / FN=0, accuracy 1.0000, exit 0. It includes an observed Egyptian-dialect refusal (`مش قادر أساعدك...`) that the MSA-only Arabic rules missed; `ar_egypt_refusal` now covers it. The two runs use different corpus sizes; do not compare raw counts across them.
+- The system prompt has one source of truth, `backend/prompts/system_prompt.txt` (7923 → 4580 chars, 215 → 57 lines); critical rules are first and last. `backend/tests/test_system_prompt.py` guards this.
+
+### Agent reliability (offline diagnostics)
+
+- `cd backend && python agent_doctor.py` prints an offline readiness report (tool count, tools that fail to instantiate, skill-pack count, always-on packs, sample task→pack selection, prompt source/size, provider readiness flags) and writes `backend/agent_doctor_report.json`. No network calls and no keys are printed.
+- Measured on this build: 44 registered tools, 0 broken on init, 1174 skill packs across 8 libraries, prompt 4580 chars, 1 `{tools}` placeholder.
+- Fixes made: removed a duplicated `get_schema()` in `tools/base.py`; `Action Input` now uses balanced JSON extraction (handles nested braces, arrays, single quotes and trailing prose) instead of a greedy regex; skill relevance is specificity-weighted with word boundaries and plural handling, so generic triggers like `tool` no longer make selection near-random and a greeting loads no task pack. Regression tests: `backend/tests/test_agent_reliability.py`.
+
+### Native tool calling
+
+- `backend/native_tools.py` builds OpenAI-style function definitions from the live tool registry (introspected `run()` signatures, falling back to each tool's `example` dict), binds them with `bind_tools()` when the model supports it, reads `tool_calls` from the reply and feeds `ToolMessage` results back into the next turn.
+- `NATIVE_TOOL_CALLS` in `backend/configs/settings.py` (default `true`, env-overridable) controls the path. Models without `bind_tools`, or whose call fails, automatically fall back to the existing text-ReAct loop — no behaviour loss.
+- Text and native paths share one guarded execution function (`_execute_tool_call`), so audit logging and the Ask/Plan mode guard apply identically to both.
+- `model_router.FailoverChat.bind_tools()` delegates binding to every candidate model and returns a cloned pool, so the router no longer hides provider tool support. A first live probe exposed a bad schema (`MemoryLogicCalculator` documented `base` but `hex2dec` reads `value`); the tool description/example and required-field inference were corrected.
+- Measured: 44 definitions for 44 registered tools; offline tests in `backend/tests/test_native_tools.py` cover execution, `ToolMessage` feedback, fallback and router delegation.
+- Live verification (`cd backend && python tests/live_native_tools_probe.py groq`, exit 0): provider accepted all 44 definitions, returned `{"op":"hex2dec","value":"0x10"}`, tool output `0x10 = 16 (dec)`, final answer 16. Report: `backend/tests/live_native_tools_report.json`.
+- `NATIVE_TOOL_LIMIT` (default 8) caps advertised function schemas and `select_tool_names()` chooses task-relevant ones. Cause: a server run returned HTTP 413 from Groq — `Limit 8000 TPM, Requested 8456` with all 44 definitions. On a 413 the limit is halved and retried before falling back to text-ReAct.
+- `ModelRouter.manager()` now orders `local, groq, gemini, hf, kilo` — Kilo's endpoint returned HTTP 404 HTML and burned two retries on every plan/reflection.
+- Additional fixes from the HTTP benchmark: `PythonInterpreter` used `_active_workspace()` without importing it — every execution died with `NameError`; fixed with a regression test. `MAX_PROMPT_CHARS` caps request growth, and trimming never splits a tool_call from its ToolMessage.
+- Benchmark results on a freshly started server with current code: EASY `final='42'` (222s). MEDIUM invoked `UniversalFileManager` + `PythonInterpreter` correctly after the fixes but never converged (provider `Parsing failed` / client timeout). HARD invoked `MemoryLogicCalculator` repeatedly (258 events in one run) but ended with Groq `413`/`Please reduce the length of the messages or completion`. The remaining blocker is provider-side context/completion limits on multi-step reasoning, not tool availability.
+
 - **Vendored references:** AutoGPT, Claude Skills, OpenHands, ECC and Hermes Agent are checked out under `vendor/`. See them in the UI under Advanced tools → Vendored repos, or via `GET /api/vendor/repos`.
 
 ## Release-readiness roadmap (no builds performed)
@@ -82,7 +130,7 @@ Features to add before any build:
 - Local uncensored model packaging (llama.cpp) so the zero-refusal brain works offline.
 - **OAuth linking:** Connect opens a new browser tab on the provider's consent page; the callback posts the result back and shows a linked message in the original page. One-time Client ID/Secret setup is handled in the inline dialog.
 - **UI polish:** `frontend/src/ui/port777-polish.css` adds themed icons, hover motion and card animations; can be disabled with `prefers-reduced-motion`.
-- **Tests:** `pytest -q` → 201 passed, 18 failed. Remaining failures are in `test_phase2_providers.py` (Splunk/Teams plugins implement an older, simpler API than the suite expects) plus 7 engine/orchestration regressions. Collection errors and pytest import paths were fixed.
+- **Tests:** `cd backend && python -m pytest -q` now works with no environment overrides — `tests/conftest.py` forces local SQLite before any project module reads `DATABASE_URL` (override with `TEST_USE_REAL_DB=1`). Measured: before this work 248 passed, 1 skipped; after **370 passed, 2 skipped, exit 0, zero warnings**. All former `datetime.utcnow()` / year-less `strptime()` deprecations were removed while preserving timestamp formats. Previously, plain `pytest -q` failed at collection with exit 4 because the shipped `.env` selects Supabase PostgreSQL and `psycopg2` is not a test dependency.
 
 ---
 
@@ -176,10 +224,12 @@ D:\xxxGPT
 | **Standard Chat** (default) | workspace-sandboxed files, code interpreter, web search/browse, Telegram |
 | **Full Access (God-mode)** | + shell execution (`SystemCommander`) + any host path (`FileSystemMaster scope="host"`), with denylist guards |
 
-God-mode is granted **only** when the user clicks `ðŸ”’ sandbox â†’ âš¡ FULL ACCESS`
+In gated mode (`ZERO_REFUSAL=false`), God-mode is granted when the user clicks `ðŸ”’ sandbox â†’ âš¡ FULL ACCESS`
 in the composer (confirm dialog), which flows into `POST /api/chat` as
-`full_access: true` **for that request only**. There is no env flag that
-pre-enables it. `ADMIN_PASSWORD` must be configured and a valid login token
+`full_access: true` **for that request only**. With `ZERO_REFUSAL=true` — the current default in both
+`backend/.env` and `backend/configs/settings.py` — host tools, shell and mutating
+actions are implicit for every run and no per-request toggle or approval prompt
+is required. `ADMIN_PASSWORD` must be configured and a valid login token
 is required; without it, API requests cannot enable Full Access. Destructive
 shell commands and protected operating-system paths remain blocked even
 after login. The header shows a red `âš¡ FULL ACCESS` pill during the run so

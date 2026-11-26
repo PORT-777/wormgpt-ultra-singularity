@@ -307,8 +307,8 @@ def _parse_web(line: str) -> Optional[Dict[str, Any]]:
 def _parse_auth(line: str) -> Optional[Dict[str, Any]]:
     ts = line[:15]
     try:
-        dt = datetime.strptime(ts, "%b %d %H:%M:%S").replace(year=datetime.now().year,
-                                                             tzinfo=timezone.utc)
+        dt = datetime.strptime(f"{datetime.now().year} {ts}",
+                               "%Y %b %d %H:%M:%S").replace(tzinfo=timezone.utc)
         ts_out = dt.isoformat()
     except Exception:
         ts_out = ts

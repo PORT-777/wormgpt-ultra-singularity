@@ -127,10 +127,6 @@ class Tool(ABC):
 
 
 def get_schema(tool: Tool) -> str:
-        return target
-
-
-def get_schema(tool: Tool) -> str:
     """Compact tool spec injected into the agent's system prompt."""
     return (
         f"- {tool.name}: {tool.description}\n"

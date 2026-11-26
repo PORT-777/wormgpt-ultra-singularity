@@ -44,6 +44,8 @@ from __future__ import annotations
 
 import asyncio
 
+import copy
+
 import json
 
 import logging
@@ -384,6 +386,29 @@ class FailoverChat:
 
         return self
 
+
+    def bind_tools(self, tools: List[Dict[str, Any]],
+                   **kwargs: Any) -> "FailoverChat":
+        """Bind function definitions on every candidate, keeping failover.
+
+        A candidate whose provider lacks tool support is left unbound (None
+        forces a fresh instance), so the engine's text-ReAct path still works.
+        """
+        cloned = copy.copy(self)
+        bound_instances = []
+        for i, (_name, _factory) in enumerate(self._factories):
+            try:
+                model = self._instance(i)
+                binder = getattr(model, "bind_tools", None)
+                bound_instances.append(
+                    binder(tools, **kwargs) if callable(binder) else model
+                )
+            except Exception as exc:
+                log.warning("[bind_tools %s] candidate %d: %s",
+                            self.route, i, exc)
+                bound_instances.append(None)
+        cloned._instances = bound_instances
+        return cloned
 
 
     async def ainvoke(self, messages: List[BaseMessage], **kw: Any) -> AIMessage:
@@ -1307,9 +1332,13 @@ class ModelRouter:
 
     def manager(self):
 
-        """Manager role: local first (no quotas), then Gemini/Groq/Kilo."""
+        """Manager role: local first, then working providers, Kilo last.
 
-        for route in ("local", "kilo", "gemini", "groq", "hf"):
+        Kilo's base URL returned HTTP 404 with an HTML body on this build,
+        which made every plan/reflection wait through two dead retries.
+        """
+
+        for route in ("local", "groq", "gemini", "hf", "kilo"):
 
             model = self.get(route)
 

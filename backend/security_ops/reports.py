@@ -320,7 +320,7 @@ def _render_markdown(kind: str, title: str, subject: str, meta: Dict[str, Any],
 
 
 def _stamp() -> str:
-    return _dt.datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+    return _dt.datetime.now(_dt.timezone.utc).strftime("%Y%m%d_%H%M%S")
 
 
 def _evidence_rows(evidence: Sequence[Any]) -> List[Dict[str, str]]:

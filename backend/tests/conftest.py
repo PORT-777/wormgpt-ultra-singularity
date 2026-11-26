@@ -4,9 +4,18 @@ paid API call.
 """
 from __future__ import annotations
 
+import os
 import sys
 from pathlib import Path
 from types import SimpleNamespace
+
+# Keep the suite hermetic. The shipped backend/.env points DATABASE_URL at
+# Supabase PostgreSQL, but psycopg2 is not a test dependency; dotenv runs with
+# override=False, so setting these before importing any project module wins.
+# Set TEST_USE_REAL_DB=1 to exercise a real database on purpose.
+if os.getenv("TEST_USE_REAL_DB") != "1":
+    os.environ["DATABASE_URL"] = "sqlite://"
+    os.environ["STORAGE_BACKEND"] = "local"
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 

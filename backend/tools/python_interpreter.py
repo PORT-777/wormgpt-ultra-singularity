@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Any
 
 import configs as config
-from .base import Tool
+from .base import Tool, _active_workspace
 
 
 class PythonInterpreter(Tool):
