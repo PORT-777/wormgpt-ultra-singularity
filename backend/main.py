@@ -119,10 +119,13 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="🔥😈 PORT 777 EVIL ☠️🔥👹 — Singularity Edition",
-    description="Agent core with dynamic plugin tooling, integrations and MCP.",
-    version="6.1.0",
+    title="AI Platform Internal API — RAG, Agents, Models, Eval, Streaming",
+    description="Internal AI services: 44 integrations, RAG, agents, model routing, observability.",
+    version="2.0.0",
     lifespan=lifespan,
+    docs_url="/api/docs",
+    redoc_url="/api/redoc",
+    openapi_url="/api/openapi.json",
 )
 
 import os as _os
@@ -218,6 +221,22 @@ try:
     logger.info("internal external-API services mounted at /api/internal/*")
 except Exception as exc:  # pragma: no cover
     logger.warning("internal external-API services not mounted: %s", exc)
+
+try:
+    from api.internal_platform import router as internal_platform_router
+
+    mount_router(app, internal_platform_router)
+    logger.info("deep AI platform routes mounted at /api/internal/*")
+except Exception as exc:  # pragma: no cover
+    logger.warning("deep AI platform routes not mounted: %s", exc)
+
+try:
+    from streaming.websocket import websocket_chat
+
+    app.add_api_websocket_route("/ws/chat/{session_id}", websocket_chat)
+    logger.info("websocket chat mounted at /ws/chat/{session_id}")
+except Exception as exc:  # pragma: no cover
+    logger.warning("websocket chat not mounted: %s", exc)
 
 # --- MCP control plane --------------------------------------------------
 from fastapi import APIRouter, Body  # noqa: E402
