@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "target": "ES2022", "useDefineForClassFields": true, "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext", "skipLibCheck": true, "moduleResolution": "Bundler", "allowImportingTsExtensions": true,
+    "resolveJsonModule": true, "isolatedModules": true, "noEmit": true, "jsx": "react-jsx",
+    "strict": false, "types": ["vite/client"]
+  },
+  "include": ["src/api", "src/store", "src/hooks", "src/lib", "src/types", "src/components/PlatformUI.tsx",
+    "src/components/ToastHost.tsx", "src/components/chat", "src/components/dashboard", "src/components/workspace",
+    "src/components/models", "src/components/agents", "src/components/workflow", "src/components/shared",
+    "src/components/layout", "src/pages", "src/PlatformApp.tsx", "src/platform-main.tsx"],
+  "exclude": ["node_modules", "dist"]
+}

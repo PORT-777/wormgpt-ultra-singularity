@@ -7,6 +7,12 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   build: {
     sourcemap: true,
+    rollupOptions: {
+      input: {
+        main: "index.html",
+        platform: "platform.html",
+      },
+    },
   },
   server: {
     port: 5173,
