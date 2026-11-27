@@ -253,7 +253,15 @@ async def ui_chat(request: Request) -> Any:
                     streamed_final.append(str(ev["data"]))
                 yield f"data: {json.dumps(ev, default=str, ensure_ascii=False)}\n\n"
         except Exception as exc:
-            yield f"data: {json.dumps({'type': 'error', 'data': f'{type(exc).__name__}: {exc}'}, ensure_ascii=False)}\n\n"
+            err = f"{type(exc).__name__}: {exc}"
+            yield f"data: {json.dumps({'type': 'error', 'data': err}, ensure_ascii=False)}\n\n"
+            if sid:
+                try:
+                    import storage
+
+                    storage.add_message(sid, "error", f"[error] {err}")
+                except Exception as log_exc:
+                    logger.error("session error-line write failed: %s", log_exc)
         if sid and streamed_final:
             try:
                 import storage

@@ -19,6 +19,15 @@ if os.getenv("TEST_USE_REAL_DB") != "1":
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+# backend/platform shadows the stdlib `platform` module BY DESIGN and proxies
+# all of its attributes (see backend/platform/__init__.py). If the stdlib
+# module was already imported (pytest and venv internals do that on some
+# platforms), drop it from sys.modules so `import platform` resolves to the
+# local package instead of failing with "'platform' is not a package".
+_stdlib_platform = sys.modules.get("platform")
+if _stdlib_platform is not None and not hasattr(_stdlib_platform, "__path__"):
+    del sys.modules["platform"]
+
 import storage
 storage.init()
 
