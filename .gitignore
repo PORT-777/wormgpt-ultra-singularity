@@ -25,6 +25,8 @@ backend/data/.platform_secrets.enc
 .plugin_key
 backend/.plugin_key
 # packaged artifacts
+backend/build/
+*.pkg
 src-tauri/target/
 *.msi
 *.apk
