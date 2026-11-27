@@ -26,6 +26,8 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - run: npm --prefix frontend ci
       - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tagName: ${{ github.ref_name }}
           releaseName: "🔥😈 PORT 777 EVIL ☠️🔥👹"
@@ -41,12 +43,12 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with: { targets: aarch64-linux-android }
       - run: npm --prefix frontend ci
-      - name: Install Tauri CLI
-        run: npm install -g @tauri-apps/cli@^2
+      - name: Install Tauri CLI (native cargo binary, no node layer)
+        run: cargo install tauri-cli --version ^2 --locked
       - name: Build Android APK (debug, aarch64)
         run: |
-          tauri android init --ci
-          tauri android build --apk --debug --target aarch64 --ci
+          cargo tauri android init --ci
+          cargo tauri android build --apk --debug --target aarch64 --ci
       - uses: actions/upload-artifact@v4
         with:
           name: port777-android-apk
