@@ -13,8 +13,9 @@ venv/
 node_modules/
 dist/
 
-# workspace sandbox contents
-workspace/
+# workspace sandbox contents (repo-root runtime dir only; do NOT ignore
+# frontend/src/components/workspace/ — those are real source files)
+/workspace/
 # long-term memory store
 backend/memory_data/
 # sqlite + audit trail
