@@ -5,6 +5,11 @@ on:
     tags: ["v*"]
   workflow_dispatch:
 
+# tauri-action creates the GitHub release and uploads the NSIS setup.exe
+# to it; the default GITHUB_TOKEN is read-only without this.
+permissions:
+  contents: write
+
 jobs:
   web:
     runs-on: ubuntu-latest
