@@ -11,7 +11,7 @@ interface ChatState {
 }
 
 export const useChatStore = create<ChatState>((set) => ({
-  messages: [], sessionId: null, mode: "chat", model: "auto/free",
+  messages: [], sessionId: null, mode: "chat", model: "auto",
   streaming: false, currentContent: "", currentSteps: [], currentSources: [],
   setSessionId: (sessionId) => set({ sessionId }),
   setMode: (mode) => set({ mode }),

@@ -5,6 +5,7 @@ export type WSMessage = Record<string, unknown> & { type?: string };
 export class WSClient {
   private ws: WebSocket | null = null;
   private timer: ReturnType<typeof setTimeout> | null = null;
+  private disposed = false;
   constructor(private sessionId: string, private base: string = WS_BASE) {}
   connect(handlers: { onMessage?: (m: WSMessage) => void; onOpen?: () => void; onClose?: () => void }) {
     const open = () => {
@@ -15,7 +16,7 @@ export class WSClient {
       };
       this.ws.onclose = () => {
         handlers.onClose?.();
-        this.timer = setTimeout(open, 2000);
+        if (!this.disposed) this.timer = setTimeout(open, 2000);
       };
     };
     open();
@@ -23,5 +24,13 @@ export class WSClient {
   send(msg: WSMessage) {
     if (this.ws?.readyState === WebSocket.OPEN) this.ws.send(JSON.stringify(msg));
   }
-  close() { if (this.timer) clearTimeout(this.timer); this.ws?.close(); this.ws = null; }
+  close() {
+    this.disposed = true;
+    if (this.timer) clearTimeout(this.timer);
+    if (this.ws) {
+      this.ws.onclose = null;
+      this.ws.close();
+      this.ws = null;
+    }
+  }
 }

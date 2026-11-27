@@ -23,6 +23,7 @@ async def websocket_chat(websocket: WebSocket, session_id: str):
                 continue
             message = str(data.get("content", ""))
             mode = str(data.get("mode", "chat"))
+            model = str(data.get("model", "auto"))
             if mode == "agent":
                 from agents.orchestrator import OrchestratorAgent
                 result = await OrchestratorAgent().run(message)
@@ -37,8 +38,11 @@ async def websocket_chat(websocket: WebSocket, session_id: str):
                 await websocket.send_json({"type": "token", "content": response.answer})
             else:
                 from .sse import _token_source
-                async for token in _token_source(message, "auto"):
-                    await websocket.send_json({"type": "token", "content": token})
+                async for token in _token_source(message, model):
+                    if token.startswith("[error:"):
+                        await websocket.send_json({"type": "error", "message": token})
+                    else:
+                        await websocket.send_json({"type": "token", "content": token})
             await websocket.send_json({"type": "done", "session_id": session_id})
     except WebSocketDisconnect:
         return

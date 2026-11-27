@@ -7,7 +7,7 @@ interface ModelState {
   setModel: (m: string) => void; setStrategy: (s: RoutingStrategy) => void; setBudget: (n: number) => void;
 }
 export const useModelStore = create<ModelState>()(persist((set) => ({
-  selectedModel: "auto/free", strategy: "task_optimal", strategyBudget: 0,
+  selectedModel: "auto", strategy: "task_optimal", strategyBudget: 0,
   setModel: (selectedModel) => set({ selectedModel }),
   setStrategy: (strategy) => set({ strategy }),
   setBudget: (strategyBudget) => set({ strategyBudget }),

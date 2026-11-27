@@ -6,6 +6,14 @@ from typing import Any, AsyncGenerator
 
 from fastapi.responses import StreamingResponse
 
+# Models known to work on the configured Groq route. OpenRouter's configured
+# key currently returns HTTP 401, so Groq is the default chat transport.
+_GROQ_MODELS = {
+    "openai/gpt-oss-120b", "openai/gpt-oss-20b",
+    "qwen/qwen3.8-27b", "allam-2-7b",
+}
+_DEFAULT_GROQ_MODEL = "openai/gpt-oss-120b"
+
 
 async def sse(events: AsyncGenerator[dict[str, Any], None]) -> AsyncGenerator[str, None]:
     async for event in events:
@@ -13,18 +21,22 @@ async def sse(events: AsyncGenerator[dict[str, Any], None]) -> AsyncGenerator[st
     yield "data: [DONE]\n\n"
 
 
-async def _token_source(prompt: str, model: str) -> AsyncGenerator[str, None]:
-    from external_apis.base import ExternalService
-    from external_apis.registry import registry
-    spec = registry.get("openrouter")
-    if spec is None or not spec.available():
-        yield "[model unavailable]"
-        return
+async def _token_source(prompt: str, model: str = "") -> AsyncGenerator[str, None]:
+    from langchain_core.messages import HumanMessage, SystemMessage
+    from model_router import ROUTER
+
+    target = model if model in _GROQ_MODELS else _DEFAULT_GROQ_MODEL
     try:
-        result = await ExternalService(spec).query("route", {
-            "model": model or "openai/gpt-4o-mini",
-            "messages": [{"role": "user", "content": prompt}]})
-        text = result.get("choices", [{}])[0].get("message", {}).get("content", "")
+        _, brain = ROUTER.resolve("groq", task=str(prompt)[:200])
+        if brain is None:
+            yield "[model unavailable: groq]"
+            return
+        reply = await brain.ainvoke([
+            SystemMessage(content="You are a concise, accurate assistant."),
+            HumanMessage(content=str(prompt)),
+        ])
+        text = getattr(reply, "content", "")
+        text = text if isinstance(text, str) else str(text or "")
         for i in range(0, len(text), 24):
             yield text[i:i + 24]
     except Exception as exc:
