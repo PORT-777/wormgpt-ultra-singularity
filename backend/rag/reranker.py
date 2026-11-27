@@ -41,16 +41,12 @@ async def hf_crossencoder_rerank(query: str, chunks: List[Chunk], top_n: int):
 
 
 async def llm_rerank(query: str, chunks: List[Chunk], top_n: int):
-    from external_apis.base import ExternalService
-    from external_apis.registry import registry
-    spec = registry.get("openrouter")
-    if spec is None or not spec.available():
-        return [RankedChunk(c, 0.5) for c in chunks[:top_n]]
+    from llm import ask
     try:
-        payload = {"model": "openai/gpt-4o-mini", "messages": [
-            {"role": "user", "content": "Score relevance 0-10 for each doc: " +
-             str([c.text[:200] for c in chunks]) + " Query: " + query}]}
-        await ExternalService(spec).query("route", payload)
+        await ask(
+            "Score relevance 0-10 for each doc: " +
+            str([c.text[:200] for c in chunks]) + " Query: " + query,
+            system="Reply with only the scores.")
     except Exception:
         pass
     return [RankedChunk(c, 0.5) for c in chunks[:top_n]]

@@ -49,17 +49,11 @@ def classify(text: str, doc_id: str = "") -> DocumentType:
 
 
 async def classify_llm(text: str) -> DocumentType:
-    from external_apis.base import ExternalService
-    from external_apis.registry import registry
-    spec = registry.get("openrouter")
-    if spec is None or not spec.available():
-        return classify(text)
+    from llm import ask
     try:
-        result = await ExternalService(spec).query("route", {
-            "model": "openai/gpt-4o-mini",
-            "messages": [{"role": "user", "content":
-                f"Classify as one of {[e.value for e in DocumentType]}: {text[:500]}"}]})
-        content = result.get("choices", [{}])[0].get("message", {}).get("content", "")
+        content = await ask(
+            f"Classify as one of {[e.value for e in DocumentType]}: {text[:500]}",
+            system="Reply with only one of the listed document types.")
         for dtype in DocumentType:
             if dtype.value in content.lower():
                 return dtype

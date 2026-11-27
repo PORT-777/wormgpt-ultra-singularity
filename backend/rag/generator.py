@@ -27,23 +27,14 @@ async def generate(question: str, results: List[RankedChunk], model: str = "auto
     import time as _t
     start = _t.perf_counter()
     prompt = build_prompt(question, results)
-    answer, model_used, tokens = "", model, 0
-    from external_apis.base import ExternalService
-    from external_apis.registry import registry
-    spec = registry.get("openrouter")
-    if spec is None or not spec.available():
-        spec = registry.get("openai")
-    if spec is not None and spec.available():
-        try:
-            result = await ExternalService(spec).query(
-                "route" if spec.name == "openrouter" else "chat",
-                {"model": "openai/gpt-4o-mini", "messages": [
-                    {"role": "user", "content": prompt}]})
-            answer = result.get("choices", [{}])[0].get("message", {}).get("content", "")
-            tokens = int(result.get("usage", {}).get("total_tokens", 0))
-            model_used = result.get("model", model)
-        except Exception as exc:
-            answer = f"[generation unavailable: {type(exc).__name__}]"
+    answer, model_used, tokens = "", "groq/openai/gpt-oss-120b", 0
+    from llm import DEFAULT_MODEL, ask
+    try:
+        answer = await ask(prompt)
+        tokens = len(answer.split())
+        model_used = f"groq/{DEFAULT_MODEL}"
+    except Exception as exc:
+        answer = f"[generation unavailable: {type(exc).__name__}]"
     sources = [Source(id=r.chunk.chunk_id,
                       title=r.chunk.section_title or r.chunk.metadata.get("source_type", ""),
                       url=str(r.chunk.metadata.get("source_url", "")),

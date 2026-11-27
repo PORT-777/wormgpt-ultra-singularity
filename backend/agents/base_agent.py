@@ -29,20 +29,13 @@ class BaseAgent:
         return {n: TOOLS[n] for n in self.tools if n in TOOLS and available(TOOLS[n])}
 
     async def think(self, task: str, history: list[dict[str, Any]]) -> dict[str, Any]:
-        from external_apis.base import ExternalService
-        from external_apis.registry import registry
-        spec = registry.get("openrouter")
-        if spec is None or not spec.available():
-            return {"answer": "No model configured", "is_final": True}
+        from llm import ask
         tool_desc = ", ".join(self.allowed_tools())
         prompt = (f"{self.system_prompt}\nTask: {task}\nTools: {tool_desc}\n"
                   'Reply JSON: {"thought":"...","tool":"name|none",'
                   '"args":{}, "answer":"..."}')
         try:
-            result = await ExternalService(spec).query("route", {
-                "model": "openai/gpt-4o-mini",
-                "messages": [{"role": "user", "content": prompt}]})
-            text = result.get("choices", [{}])[0].get("message", {}).get("content", "{}")
+            text = await ask(prompt, system="You are a precise JSON-producing planner.")
             m = re.search(r"\{.*\}", text, re.S)
             data = json.loads(m.group(0)) if m else {}
             return {"thought": data.get("thought", ""),
