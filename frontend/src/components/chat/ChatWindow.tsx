@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useChat } from "../../hooks/use-chat";
 import { ModeSelector } from "./ModeSelector";
 import { MessageBubble } from "./MessageBubble";
@@ -6,6 +7,9 @@ import { StreamingMessage } from "./StreamingMessage";
 import { AgentSteps } from "./AgentSteps";
 export function ChatWindow() {
   const chat = useChat();
+  useEffect(() => {
+    if (!chat.sessionId) chat.setSessionId(crypto.randomUUID());
+  }, [chat.sessionId]);
   return <div className="flex min-w-0 flex-1 flex-col">
     <div className="flex items-center justify-between border-b p-3"><ModeSelector /><span className="text-xs text-muted-foreground">{chat.connected ? "Connected" : "Connecting…"}</span></div>
     <div className="flex-1 overflow-y-auto p-4">
