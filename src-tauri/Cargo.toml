@@ -5,6 +5,11 @@ description = "PORT 777 EVIL — AI workspace"
 authors = ["PORT 777"]
 edition = "2021"
 
+
+[lib]
+name = "port777_evil_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
 
